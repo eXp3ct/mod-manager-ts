@@ -1,22 +1,38 @@
 import { useEffect, useState } from 'react'
 import { ModList } from './components/ModList'
-import { Mod } from 'src/types'
-import { searchMods } from '../../curse_client/services/modService'
+import { Mod, ModLoaderType } from 'src/types/index'
+import { searchMods } from 'src/curse_client/services/modService'
+import { MinecraftVersion } from 'src/types/minecraft'
+import { fetchMinecraftVersions } from 'src/curse_client/services/minecraftService'
 
 function App(): JSX.Element {
   const [mods, setMods] = useState<Mod[]>([])
+  const [versions, setVersions] = useState<MinecraftVersion[]>([])
+
+  let loaders = Object.values(ModLoaderType) as string[]
+  loaders = loaders.splice(0, loaders.length / 2) as string[]
 
   useEffect(() => {
     const loadMods = async (): Promise<void> => {
       try {
         const mods = await searchMods()
 
-        setMods(mods.data)
+        setMods(mods)
       } catch (error) {
         console.error('Error fetching mods', error)
       }
     }
+    const loadVersions = async (sortDesc: boolean): Promise<void> => {
+      try {
+        const versions = await fetchMinecraftVersions(sortDesc)
 
+        setVersions(versions)
+      } catch (error) {
+        console.error('Error fetching versions', error)
+      }
+    }
+
+    loadVersions(true)
     loadMods()
   }, [])
 
@@ -55,18 +71,17 @@ function App(): JSX.Element {
               {/* Фильтр по версии игры */}
               <select className="bg-gray-700 text-white p-2 rounded focus:outline-none">
                 <option>Версия игры</option>
-                <option>1.18</option>
-                <option>1.17</option>
-                <option>1.16</option>
-                {/* Добавить другие версии */}
+                {versions.map((version) => (
+                  <option key={version.id}>{version.versionString}</option>
+                ))}
               </select>
 
               {/* Тип мод лоадера */}
               <select className="bg-gray-700 text-white p-2 rounded focus:outline-none">
                 <option>Тип мод лоадера</option>
-                <option>Forge</option>
-                <option>Fabric</option>
-                <option>Quilt</option>
+                {loaders.map((loader) => (
+                  <option key={loader.length}>{loader}</option>
+                ))}
               </select>
 
               {/* Сортировка */}

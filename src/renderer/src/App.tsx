@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import { ModList } from './components/ModList'
-import { Mod, ModLoaderType } from 'src/types/index'
-import { searchMods } from 'src/curse_client/services/modService'
+import { Category, Mod, ModLoaderType } from 'src/types/index'
+import { fetchCategories, searchMods } from 'src/curse_client/services/modService'
 import { MinecraftVersion } from 'src/types/minecraft'
 import { fetchMinecraftVersions } from 'src/curse_client/services/minecraftService'
+import { CategorySidebar } from './components/CategoryItem'
 
 function App(): JSX.Element {
   const [mods, setMods] = useState<Mod[]>([])
   const [versions, setVersions] = useState<MinecraftVersion[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
 
   let loaders = Object.values(ModLoaderType) as string[]
   loaders = loaders.splice(0, loaders.length / 2) as string[]
@@ -31,7 +33,17 @@ function App(): JSX.Element {
         console.error('Error fetching versions', error)
       }
     }
+    const loadCategories = async (): Promise<void> => {
+      try {
+        const categories = await fetchCategories()
 
+        setCategories(categories)
+      } catch (error) {
+        console.error('Error fetching categories', error)
+      }
+    }
+
+    loadCategories()
     loadVersions(true)
     loadMods()
   }, [])
@@ -51,15 +63,17 @@ function App(): JSX.Element {
 
       <div className="flex h-full">
         {/* Боковая панель */}
-        <aside className="w-1/6 bg-gray-800 p-4">
+        {/* <aside className="w-1/6 bg-gray-800 p-4">
           <h2 className="text-xl font-bold mb-4">Категории</h2>
           <ul className="space-y-2">
-            <li className="hover:bg-gray-700 p-2 rounded-lg cursor-pointer">Все</li>
-            <li className="hover:bg-gray-700 p-2 rounded cursor-pointer">Популярные</li>
-            <li className="hover:bg-gray-700 p-2 rounded cursor-pointer">Последние</li>
-            <li className="hover:bg-gray-700 p-2 rounded cursor-pointer">По версии</li>
+            {categories.map((category) => (
+              <li key={category.id} className="hover:bg-gray-700 p-2 rounded-lg cursor-pointer">
+                {category.name}
+              </li>
+            ))}
           </ul>
-        </aside>
+        </aside> */}
+        <CategorySidebar categories={categories} />
 
         {/* Основная панель */}
         <main className="flex-1 p-6 overflow-y-auto">

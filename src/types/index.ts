@@ -2,6 +2,10 @@ export type ModData = {
   data: Mod[]
 }
 
+export type CurseData<T> = {
+  data: T
+}
+
 export type Mod = {
   id: number
   gameId: number

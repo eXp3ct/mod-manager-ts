@@ -1,7 +1,7 @@
 import { Category, CurseData, Mod } from '../../types'
 import { get } from '../apiClient'
 
-const SEARCH_URL = '/v1/mods/search?gameId=432&index=0&pageSize=10'
+const SEARCH_URL = '/v1/mods/search?gameId=432&index=0&pageSize=50'
 const CATEGORIES_URL = '/v1/categories?gameId=432&classId=6'
 
 export async function searchMods(): Promise<Mod[]> {

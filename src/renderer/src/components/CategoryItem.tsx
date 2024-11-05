@@ -55,16 +55,12 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ category, categories, level
 }
 
 export const CategorySidebar: React.FC<{ categories: Category[] }> = ({ categories }) => {
-  console.log('All categories:', categories) // Добавляем лог для проверки данных
-
   const rootCategories = categories.filter(
     (category) => category.parentCategoryId === 6 || !category.parentCategoryId
   )
 
-  console.log('Root categories:', rootCategories) // Проверяем корневые категории
-
   return (
-    <aside className="w-1/6 bg-gray-800 p-4">
+    <aside className="w-1/6 bg-gray-800 p-4 sticky top-0 h-screen overflow-y-auto">
       <h2 className="text-xl font-bold mb-4 text-white">Категории</h2>
       <div className="space-y-1">
         {rootCategories && rootCategories.length > 0 ? (

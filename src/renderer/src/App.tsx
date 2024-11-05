@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ModList } from './components/ModList'
-import { Category, Mod, ModLoaderType } from 'src/types/index'
+import { Category, Mod, ModLoaderType, SearchSortFields } from 'src/types/index'
 import { fetchCategories, searchMods } from 'src/curse_client/services/modService'
 import { MinecraftVersion } from 'src/types/minecraft'
 import { fetchMinecraftVersions } from 'src/curse_client/services/minecraftService'
@@ -13,6 +13,9 @@ function App(): JSX.Element {
 
   let loaders = Object.values(ModLoaderType) as string[]
   loaders = loaders.splice(0, loaders.length / 2) as string[]
+
+  let sortFields = Object.values(SearchSortFields) as string[]
+  sortFields = sortFields.splice(0, sortFields.length / 2) as string[]
 
   useEffect(() => {
     const loadMods = async (): Promise<void> => {
@@ -49,7 +52,7 @@ function App(): JSX.Element {
   }, [])
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col h-full bg-gray-900 text-white">
       {/* Навбар */}
       <nav className="flex items-center justify-between bg-gray-800 p-4 shadow-lg">
         <h1 className="text-2xl font-bold">Minecraft Mod Manager</h1>
@@ -62,62 +65,60 @@ function App(): JSX.Element {
       </nav>
 
       <div className="flex h-full">
-        {/* Боковая панель */}
-        {/* <aside className="w-1/6 bg-gray-800 p-4">
-          <h2 className="text-xl font-bold mb-4">Категории</h2>
-          <ul className="space-y-2">
-            {categories.map((category) => (
-              <li key={category.id} className="hover:bg-gray-700 p-2 rounded-lg cursor-pointer">
-                {category.name}
-              </li>
-            ))}
-          </ul>
-        </aside> */}
+        {/* Боковая панель с прокруткой */}
         <CategorySidebar categories={categories} />
 
-        {/* Основная панель */}
+        {/* Основная панель с прокруткой */}
         <main className="flex-1 p-6 overflow-y-auto">
           {/* Кнопки фильтров и сортировки */}
           <div className="flex items-center justify-between mb-4">
-            <button className="bg-gray-700 px-4 py-2 rounded hover:bg-gray-600">Фильтры</button>
-
             <div className="flex space-x-4">
               {/* Фильтр по версии игры */}
-              <select className="bg-gray-700 text-white p-2 rounded focus:outline-none">
-                <option>Версия игры</option>
-                {versions.map((version) => (
-                  <option key={version.id}>{version.versionString}</option>
-                ))}
-              </select>
+              <div className="flex flex-col w-40">
+                <label className="block mb-1 text-sm font-medium text-gray-900 dark:text-white">
+                  Версия игры
+                </label>
+                <select className="bg-gray-700 text-white p-2 rounded-lg focus:outline-none w-full">
+                  {versions.map((version) => (
+                    <option key={version.id}>{version.versionString}</option>
+                  ))}
+                </select>
+              </div>
 
               {/* Тип мод лоадера */}
-              <select className="bg-gray-700 text-white p-2 rounded focus:outline-none">
-                <option>Тип мод лоадера</option>
-                {loaders.map((loader) => (
-                  <option key={loader.length}>{loader}</option>
-                ))}
-              </select>
+              <div className="flex flex-col w-40">
+                <label className="block mb-1 text-sm font-medium text-gray-900 dark:text-white">
+                  Загрузчик
+                </label>
+                <select className="bg-gray-700 text-white p-2 rounded-lg focus:outline-none w-full">
+                  {loaders.map((loader) => (
+                    <option key={loader.length}>{loader}</option>
+                  ))}
+                </select>
+              </div>
 
               {/* Сортировка */}
-              <div className="relative">
-                <button className="bg-gray-700 px-4 py-2 rounded hover:bg-gray-600">
-                  Сортировка
-                </button>
-                <div className="absolute right-0 mt-2 w-48 bg-gray-700 rounded shadow-lg z-10 hidden group-hover:block">
-                  <ul className="p-2">
-                    <li className="hover:bg-gray-600 p-2 rounded cursor-pointer">По имени</li>
-                    <li className="hover:bg-gray-600 p-2 rounded cursor-pointer">
-                      По популярности
-                    </li>
-                    <li className="hover:bg-gray-600 p-2 rounded cursor-pointer">По дате</li>
-                  </ul>
-                </div>
+              <div className="flex flex-col w-40">
+                <label className="block mb-1 text-sm font-medium text-gray-900 dark:text-white">
+                  Сортировать по
+                </label>
+                <select className="bg-gray-700 text-white p-2 rounded-lg focus:outline-none w-full">
+                  {sortFields.map((field) => (
+                    <option key={field.length}>{field}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Флажок возрастание/убывание */}
-              <div className="flex items-center space-x-2">
-                <span className="text-sm">По убыванию</span>
-                <input type="checkbox" className="form-checkbox h-4 w-4 text-blue-500" />
+              <div className="flex items-center mb-4">
+                <input
+                  type="checkbox"
+                  value=""
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-lg focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                />
+                <label className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                  Default checkbox
+                </label>
               </div>
             </div>
           </div>

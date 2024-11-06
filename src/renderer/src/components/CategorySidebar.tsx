@@ -8,9 +8,10 @@ type CategoryItemProps = {
   category: Category
   categories: Category[]
   level: number
+  onClick: (category: Category) => void
 }
 
-const CategoryItem: React.FC<CategoryItemProps> = ({ category, categories, level }) => {
+const CategoryItem: React.FC<CategoryItemProps> = ({ category, categories, level, onClick }) => {
   const [isOpen, setIsOpen] = useState(false)
 
   const childCategories = categories.filter((cat) => cat.parentCategoryId === category.id)
@@ -21,11 +22,18 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ category, categories, level
       <div
         className="flex items-center w-full px-2 py-1.5 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors duration-200"
         style={{ paddingLeft: `${level * 1}rem` }}
-        onClick={() => hasChildren && setIsOpen(!isOpen)}
+        onClick={(e) => {
+          e.preventDefault()
+          onClick(category)
+        }}
       >
         {hasChildren ? (
-          <span className="mr-1 text-gray-400">
-            {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          <span className="mr-1 text-gray-400 h-full">
+            {isOpen ? (
+              <ChevronDown className="w-4" onClick={() => setIsOpen(!isOpen)} />
+            ) : (
+              <ChevronRight className="w-4" onClick={() => setIsOpen(!isOpen)} />
+            )}
           </span>
         ) : (
           <span className="w-5" />
@@ -48,6 +56,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ category, categories, level
               category={childCategory}
               categories={categories}
               level={level + 1}
+              onClick={onClick}
             />
           ))}
         </div>
@@ -56,7 +65,10 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ category, categories, level
   )
 }
 
-export const CategorySidebar: React.FC<{ categories: Category[] }> = ({ categories }) => {
+export const CategorySidebar: React.FC<{
+  categories: Category[]
+  onChange: (category: Category) => void
+}> = ({ categories, onChange }) => {
   const rootCategories = categories.filter(
     (category) => category.parentCategoryId === MAX_PARENT_CATEGORY_ID || !category.parentCategoryId
   )
@@ -67,7 +79,13 @@ export const CategorySidebar: React.FC<{ categories: Category[] }> = ({ categori
       <div className="space-y-1">
         {rootCategories && rootCategories.length > 0 ? (
           rootCategories.map((category) => (
-            <CategoryItem key={category.id} category={category} categories={categories} level={0} />
+            <CategoryItem
+              key={category.id}
+              category={category}
+              categories={categories}
+              level={0}
+              onClick={onChange}
+            />
           ))
         ) : (
           <div className="text-gray-400">Нет доступных категорий</div>

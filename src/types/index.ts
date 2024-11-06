@@ -200,17 +200,12 @@ export type SearchState = {
   gameId: number
   classId: number
   categoryId: number
-  categoryIds: string
   gameVersion: string
-  gameVersions: string
   searchFilter: string
   sortField: SearchSortField
   sortOrder: SortOrder
   modLoaderType: ModLoaderType
-  modLoaderTypes: string
-  gameVersionTypeId: number
   authorId: number
-  primaryAuthorId: number
   slug: string
   index: number
   pageSize: number

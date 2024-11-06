@@ -1,12 +1,21 @@
 import React, { useState } from 'react'
-import { Mod } from '../../../types/index'
+import { Mod } from 'src/types'
+import { useError } from './ErrorProvider'
 
 type ModCardProp = {
   mod: Mod
 }
 
 export const ModCard: React.FC<ModCardProp> = ({ mod }) => {
+  const logError = useError()
   const [imageError, setImageError] = useState(false)
+
+  const handleImageError = (): void => {
+    logError.logError('Ошибка загрузки изображения', {
+      type: 'DEV_ONLY'
+    })
+    setImageError(true)
+  }
 
   return (
     <div className="bg-gray-800 p-4 rounded-lg shadow-md hover:bg-gray-700 transition-colors h-full flex flex-col">
@@ -20,9 +29,9 @@ export const ModCard: React.FC<ModCardProp> = ({ mod }) => {
           <div className="w-32 h-32 flex-shrink-0">
             <img
               src={mod.logo.url}
-              alt={mod.name}
+              alt={mod.slug}
               className="w-full h-full object-cover rounded-lg"
-              onError={() => setImageError(true)}
+              onError={handleImageError}
             />
           </div>
         )}

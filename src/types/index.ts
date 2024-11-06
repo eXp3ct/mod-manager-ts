@@ -1,7 +1,3 @@
-export type ModData = {
-  data: Mod[]
-}
-
 export type CurseData<T> = {
   data: T
 }
@@ -180,7 +176,7 @@ export type Logo = {
   url: string
 }
 
-export enum SearchSortFields {
+export enum SearchSortField {
   Featured = 1,
   Popularity = 2,
   LastUpdated = 3,
@@ -193,4 +189,29 @@ export enum SearchSortFields {
   FeaturedReleased = 10,
   ReleasedDate = 11,
   Rating = 12
+}
+
+export enum SortOrder {
+  Asc = 'asc',
+  Desc = 'desc'
+}
+
+export type SearchState = {
+  gameId: number
+  classId: number
+  categoryId: number
+  categoryIds: string
+  gameVersion: string
+  gameVersions: string
+  searchFilter: string
+  sortField: SearchSortField
+  sortOrder: SortOrder
+  modLoaderType: ModLoaderType
+  modLoaderTypes: string
+  gameVersionTypeId: number
+  authorId: number
+  primaryAuthorId: number
+  slug: string
+  index: number
+  pageSize: number
 }

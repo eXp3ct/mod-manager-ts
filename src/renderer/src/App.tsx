@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
-import { ModList } from './components/ModList'
-import { Category, Mod, ModLoaderType, SearchSortFields } from 'src/types/index'
-import { fetchCategories, searchMods } from 'src/curse_client/services/modService'
-import { MinecraftVersion } from 'src/types/minecraft'
+import { ErrorProvider, useError } from './components/ErrorProvider'
 import { fetchMinecraftVersions } from 'src/curse_client/services/minecraftService'
+import { searchMods, fetchCategories } from 'src/curse_client/services/modService'
+import { Mod, Category, ModLoaderType, SearchSortField } from 'src/types'
+import { MinecraftVersion } from 'src/types/minecraft'
 import { CategorySidebar } from './components/CategoryItem'
+import { ModList } from './components/ModList'
 
-function App(): JSX.Element {
+// Оборачиваем основное содержимое в компонент для доступа к хуку useError
+function AppContent(): JSX.Element {
+  const { logError } = useError()
   const [mods, setMods] = useState<Mod[]>([])
   const [versions, setVersions] = useState<MinecraftVersion[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -14,43 +17,27 @@ function App(): JSX.Element {
   let loaders = Object.values(ModLoaderType) as string[]
   loaders = loaders.splice(0, loaders.length / 2) as string[]
 
-  let sortFields = Object.values(SearchSortFields) as string[]
+  let sortFields = Object.values(SearchSortField) as string[]
   sortFields = sortFields.splice(0, sortFields.length / 2) as string[]
 
   useEffect(() => {
-    const loadMods = async (): Promise<void> => {
-      try {
-        const mods = await searchMods()
+    Promise.all([searchMods(), fetchCategories(), fetchMinecraftVersions(true)])
+      .then((value) => {
+        setMods(value[0])
+        setCategories(value[1])
+        setVersions(value[2])
+      })
+      .catch((error) => {
+        // Логируем ошибку загрузки как DEV_ONLY
+        logError('Ошибка загрузки данных', {
+          type: 'CRITICAL',
+          error,
+          details: { component: 'App', action: 'initial-load' }
+        })
+      })
+  }, [logError])
 
-        setMods(mods)
-      } catch (error) {
-        console.error('Error fetching mods', error)
-      }
-    }
-    const loadVersions = async (sortDesc: boolean): Promise<void> => {
-      try {
-        const versions = await fetchMinecraftVersions(sortDesc)
-
-        setVersions(versions)
-      } catch (error) {
-        console.error('Error fetching versions', error)
-      }
-    }
-    const loadCategories = async (): Promise<void> => {
-      try {
-        const categories = await fetchCategories()
-
-        setCategories(categories)
-      } catch (error) {
-        console.error('Error fetching categories', error)
-      }
-    }
-
-    loadCategories()
-    loadVersions(true)
-    loadMods()
-  }, [])
-
+  // Остальной код компонента остается тем же
   return (
     <div className="flex flex-col h-full bg-gray-900 text-white">
       {/* Навбар */}
@@ -128,6 +115,15 @@ function App(): JSX.Element {
         </main>
       </div>
     </div>
+  )
+}
+
+// Основной компонент теперь оборачивает контент в ErrorProvider
+function App(): JSX.Element {
+  return (
+    <ErrorProvider>
+      <AppContent />
+    </ErrorProvider>
   )
 }
 

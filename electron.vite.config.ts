@@ -14,7 +14,8 @@ export default defineConfig({
       alias: {
         '@renderer': resolve('src/renderer/src'),
         'src/curse_client': resolve(__dirname, 'src/curse_client'),
-        'src/types': resolve(__dirname, 'src/types')
+        'src/types': resolve(__dirname, 'src/types'),
+        '@/*': resolve('./*')
       }
     },
     plugins: [react()],

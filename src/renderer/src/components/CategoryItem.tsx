@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { Category } from 'src/types'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 
+const MAX_PARENT_CATEGORY_ID = 6
+
 type CategoryItemProps = {
   category: Category
   categories: Category[]
@@ -56,7 +58,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ category, categories, level
 
 export const CategorySidebar: React.FC<{ categories: Category[] }> = ({ categories }) => {
   const rootCategories = categories.filter(
-    (category) => category.parentCategoryId === 6 || !category.parentCategoryId
+    (category) => category.parentCategoryId === MAX_PARENT_CATEGORY_ID || !category.parentCategoryId
   )
 
   return (

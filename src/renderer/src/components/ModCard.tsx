@@ -17,18 +17,18 @@ export const ModCard: React.FC<ModCardProp> = ({ mod }) => {
 
   const handleDetailsClick = async (): Promise<void> => {
     try {
-      // Делаем запрос к API для получения HTML
       fetchDetails(mod.id)
-        .then((data) => setHtmlContent(data))
+        .then((data) => {
+          setHtmlContent(data)
+          setShowModal(true)
+        })
         .catch((error) => {
           logError('Ошибка загрузки описания', {
-            type: 'DEV_ONLY',
+            type: 'CRITICAL',
             error,
             details: { 'Mod id': mod.id }
           })
         })
-
-      setShowModal(true)
     } catch (error) {
       console.error('Ошибка при получении данных:', error)
     }

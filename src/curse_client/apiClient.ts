@@ -1,12 +1,10 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 
-const API_KEY = '$2a$10$ELJ0FcxFLTXGmPRWzynsYOj051DwZtEuuyK8ALgZUho3CIuYbvQZS'
-
 const apiClient = axios.create({
   baseURL: 'https://api.curseforge.com',
   headers: {
     'Content-Type': 'application/json',
-    'x-api-key': API_KEY
+    'x-api-key': import.meta.env.VITE_API_KEY
   }
 })
 

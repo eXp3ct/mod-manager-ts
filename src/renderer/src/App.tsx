@@ -78,6 +78,10 @@ function AppContent(): JSX.Element {
   }
 
   const handleCategoryChange = (category: Category | undefined): void => {
+    if (category?.id === searchParams.categoryId) {
+      setSearchParams((prev) => ({ ...prev, categoryId: undefined }))
+      return
+    }
     setSearchParams((prev) => ({ ...prev, categoryId: category?.id }))
   }
 
@@ -101,7 +105,11 @@ function AppContent(): JSX.Element {
 
       <div className="flex h-full">
         {/* Боковая панель с прокруткой */}
-        <CategorySidebar categories={categories} onChange={handleCategoryChange} />
+        <CategorySidebar
+          categories={categories}
+          onChange={handleCategoryChange}
+          selectedCategoryId={searchParams.categoryId}
+        />
 
         {/* Основная панель с прокруткой */}
         <main className="flex-1 p-6 overflow-y-auto">

@@ -9,18 +9,28 @@ type CategoryItemProps = {
   categories: Category[]
   level: number
   onClick: (category: Category) => void
+  selectedCategoryId: number | undefined
 }
 
-const CategoryItem: React.FC<CategoryItemProps> = ({ category, categories, level, onClick }) => {
+const CategoryItem: React.FC<CategoryItemProps> = ({
+  category,
+  categories,
+  level,
+  onClick,
+  selectedCategoryId
+}) => {
   const [isOpen, setIsOpen] = useState(false)
 
+  const isSelected = selectedCategoryId === category.id
   const childCategories = categories.filter((cat) => cat.parentCategoryId === category.id)
   const hasChildren = childCategories.length > 0
 
   return (
     <div className="w-full">
       <div
-        className="flex items-center w-full px-2 py-1.5 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors duration-200"
+        className={`flex items-center w-full px-2 py-1.5 rounded-lg cursor-pointer transition-colors duration-200 ${
+          isSelected ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'
+        }`}
         style={{ paddingLeft: `${level * 1}rem` }}
         onClick={(e) => {
           e.preventDefault()
@@ -28,7 +38,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ category, categories, level
         }}
       >
         {hasChildren ? (
-          <span className="mr-1 text-gray-400 h-full">
+          <span className="mr-1 text-gray-400 h-full" onClick={(e) => e.stopPropagation()}>
             {isOpen ? (
               <ChevronDown className="w-4" onClick={() => setIsOpen(!isOpen)} />
             ) : (
@@ -45,7 +55,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ category, categories, level
             className="w-full h-full object-cover rounded-lg"
           />
         </div>
-        <span className="text-gray-200 text-sm">{category.name}</span>
+        <span className="text-sm">{category.name}</span>
       </div>
 
       {isOpen && hasChildren && (
@@ -57,6 +67,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ category, categories, level
               categories={categories}
               level={level + 1}
               onClick={onClick}
+              selectedCategoryId={selectedCategoryId}
             />
           ))}
         </div>
@@ -68,7 +79,8 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ category, categories, level
 export const CategorySidebar: React.FC<{
   categories: Category[]
   onChange: (category: Category) => void
-}> = ({ categories, onChange }) => {
+  selectedCategoryId: number | undefined
+}> = ({ categories, onChange, selectedCategoryId }) => {
   const rootCategories = categories.filter(
     (category) => category.parentCategoryId === MAX_PARENT_CATEGORY_ID || !category.parentCategoryId
   )
@@ -85,6 +97,7 @@ export const CategorySidebar: React.FC<{
               categories={categories}
               level={0}
               onClick={onChange}
+              selectedCategoryId={selectedCategoryId}
             />
           ))
         ) : (

@@ -22,14 +22,15 @@ export type Mod = {
   latestFiles: File[]
   latestFilesIndexes: LatestFilesIndex[]
   latestEarlyAccessFilesIndexes: LatestFilesIndex[]
-  dateCreated: Date
-  dateModified: Date
-  dateReleased: Date
+  dateCreated: string
+  dateModified: string
+  dateReleased: string
   allowModDistribution: boolean
   gamePopularityRank: number
   isAvailable: boolean
   thumbsUpCount: number
   rating: number
+  selected: boolean
 }
 
 export enum ModStatus {

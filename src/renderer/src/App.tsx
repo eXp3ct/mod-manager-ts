@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react'
 import { ErrorProvider, useError } from './components/ErrorProvider'
 import { fetchMinecraftVersions } from 'src/curse_client/services/minecraftService'
 import { fetchCategories } from 'src/curse_client/services/modService'
-import { Mod, Category, ModLoaderType, SearchSortField, SearchState } from 'src/types'
+import { Mod, Category, ModLoaderType, SearchSortField, SearchState, SortOrder } from 'src/types'
 import { MinecraftVersion } from 'src/types/minecraft'
 import { CategorySidebar } from './components/CategorySidebar'
 import { ModList } from './components/ModList'
-import { searchMods } from 'src/curse_client/services/searchService'
+import { ArrowDownWideNarrow, ArrowUpWideNarrow } from 'lucide-react'
+import { fetchMods } from 'src/curse_client/services/cacheService'
+import { SelectedModsProvider } from './contexts/SelectedModsContext'
+import InstallModsModal from './components/InstallModsModal'
 
 const PAGINATION_LIMIT = 10000
 
@@ -21,12 +24,14 @@ function AppContent(): JSX.Element {
     gameVersion: '1.12.2',
     classId: 6,
     sortField: SearchSortField.TotalDownloads,
+    sortOrder: SortOrder.Desc,
     modLoaderType: ModLoaderType.Forge,
     index: 0,
     pageSize: 15
   })
   const [searchInput, setSearchInput] = useState<string>('')
   const [pageNumber, setPageNumber] = useState<number>(1)
+  const [showInstallModal, setShowInstallModal] = useState<boolean>(false)
 
   const loaders = Object.keys(ModLoaderType)
     .filter((key) => isNaN(Number(key))) // Оставляем только строковые ключи
@@ -37,7 +42,7 @@ function AppContent(): JSX.Element {
     .map((key) => key as keyof typeof SearchSortField)
 
   useEffect(() => {
-    searchMods(searchParams)
+    fetchMods(searchParams)
       .then(setMods)
       .catch((error) => {
         logError('Ошибка поиска', 'Были введены некорреткные данные', {
@@ -100,6 +105,14 @@ function AppContent(): JSX.Element {
     const pageSize = searchParams.pageSize as number
     setSearchParams((prev) => ({ ...prev, index: (prev.index as number) + pageSize }))
     setPageNumber(pageNumber)
+  }
+
+  const toggleSortOrder = (): void => {
+    let order: SortOrder
+    if (searchParams.sortOrder === SortOrder.Desc) order = SortOrder.Asc
+    else order = SortOrder.Desc
+
+    setSearchParams((prev) => ({ ...prev, sortOrder: order }))
   }
 
   // Остальной код компонента остается тем же
@@ -186,16 +199,32 @@ function AppContent(): JSX.Element {
               </div>
 
               {/* Флажок возрастание/убывание */}
-              <div className="flex items-center mb-4">
-                <input
-                  type="checkbox"
-                  value=""
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-lg focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                />
-                <label className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
-                  Default checkbox
-                </label>
+              <div className="flex flex-col justify-end">
+                <button
+                  onClick={toggleSortOrder} // добавьте метод для переключения порядка сортировки
+                  className="p-2 bg-gray-700 rounded-lg text-gray-200 hover:bg-gray-600"
+                >
+                  {searchParams.sortOrder === SortOrder.Desc ? (
+                    <ArrowDownWideNarrow size={24} />
+                  ) : (
+                    <ArrowUpWideNarrow size={24} />
+                  )}
+                </button>
               </div>
+            </div>
+            <div>
+              <button
+                className="p-2 bg-gray-700 rounded-lg text-gray-200 hover:bg-gray-600"
+                onClick={() => setShowInstallModal(true)}
+              >
+                Начать установку
+              </button>
+              {showInstallModal && (
+                <InstallModsModal
+                  onClose={() => setShowInstallModal(false)}
+                  searchParams={searchParams}
+                />
+              )}
             </div>
           </div>
 
@@ -219,7 +248,9 @@ function AppContent(): JSX.Element {
 function App(): JSX.Element {
   return (
     <ErrorProvider>
-      <AppContent />
+      <SelectedModsProvider>
+        <AppContent />
+      </SelectedModsProvider>
     </ErrorProvider>
   )
 }

@@ -20,11 +20,17 @@ export const ModList: React.FC<ModListProps> = ({
 }) => {
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {mods.map((mod) => (
-          <ModCard key={mod.id} mod={mod} />
-        ))}
-      </div>
+      {mods.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {mods.map((mod) => (
+            <ModCard key={mod.id} mod={mod} />
+          ))}
+        </div>
+      ) : (
+        <div className="w-full flex justify-center">
+          <h1 className="text-lg">Ничего не удалось найти</h1>
+        </div>
+      )}
       <Pagination
         pageNumber={pageNumber}
         prevPage={prevPage}

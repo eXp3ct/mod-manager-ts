@@ -4,6 +4,7 @@ import { useError } from './ErrorProvider'
 import { Download, SquareArrowOutUpRight, Image } from 'lucide-react'
 import HtmlModal from './HtmlModal'
 import { fetchDetails } from 'src/curse_client/services/modService'
+import { useSelectedMods } from '@renderer/contexts/SelectedModsContext'
 
 type ModCardProp = {
   mod: Mod
@@ -14,6 +15,8 @@ export const ModCard: React.FC<ModCardProp> = ({ mod }) => {
   const [imageError, setImageError] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [htmlContent, setHtmlContent] = useState<string>('')
+  const { selectedMods, toggleModSelection } = useSelectedMods()
+  const isSelected = selectedMods.some((selectedMod) => selectedMod.id === mod.id)
 
   const handleDetailsClick = async (): Promise<void> => {
     try {
@@ -52,7 +55,10 @@ export const ModCard: React.FC<ModCardProp> = ({ mod }) => {
   }
 
   return (
-    <div className="bg-gray-800 p-4 rounded-lg shadow-md hover:bg-gray-700 transition-colors h-full flex flex-col">
+    <div
+      className="bg-gray-800 p-4 rounded-lg shadow-md hover:bg-gray-700 transition-colors h-full flex flex-col hover:cursor-pointer"
+      onClick={() => toggleModSelection(mod)}
+    >
       <div className="flex justify-between items-start gap-4 flex-1">
         <div className="flex-1">
           <h3 className="text-xl font-bold text-white mb-2">{mod.name}</h3>
@@ -73,7 +79,7 @@ export const ModCard: React.FC<ModCardProp> = ({ mod }) => {
                 onError={handleImageError}
               />
             ) : (
-              <Image className="w-full h-full object-cover rounded-lg"/>
+              <Image className="w-full h-full object-cover rounded-lg" />
             )}
           </div>
         )}
@@ -88,6 +94,8 @@ export const ModCard: React.FC<ModCardProp> = ({ mod }) => {
               type="checkbox"
               className="peer h-10 w-10 cursor-pointer transition-all appearance-none rounded-lg bg-slate-100 shadow hover:shadow-md border border-slate-300 checked:bg-blue-500 checked:border-blue-500"
               id="check-custom-style"
+              checked={isSelected}
+              onChange={() => toggleModSelection(mod)}
             />
             <span className="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
               <svg
@@ -111,7 +119,10 @@ export const ModCard: React.FC<ModCardProp> = ({ mod }) => {
         {/* Кнопка "Подробнее" */}
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-          onClick={handleDetailsClick}
+          onClick={(e) => {
+            e.stopPropagation()
+            handleDetailsClick()
+          }}
         >
           Подробнее
         </button>

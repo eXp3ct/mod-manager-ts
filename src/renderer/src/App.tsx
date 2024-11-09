@@ -40,7 +40,7 @@ function AppContent(): JSX.Element {
     searchMods(searchParams)
       .then(setMods)
       .catch((error) => {
-        logError('Ошибка при поиске модов', {
+        logError('Ошибка поиска', 'Были введены некорреткные данные', {
           type: 'DEV_ONLY',
           error,
           details: { searchParams }
@@ -56,7 +56,7 @@ function AppContent(): JSX.Element {
       })
       .catch((error) => {
         // Логируем ошибку загрузки как DEV_ONLY
-        logError('Ошибка загрузки данных', {
+        logError('Ошибка загрузки данных', 'Выбраны некорреткные данные', {
           type: 'CRITICAL',
           error,
           details: { component: 'App', action: 'initial-load' }

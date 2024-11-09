@@ -7,6 +7,7 @@ export type ErrorType = 'CRITICAL' | 'DEV_ONLY' | 'SILENT'
 // Интерфейс для ошибки
 interface ErrorNotification {
   id: string
+  title: string
   message: string
   type: ErrorType
 }
@@ -20,9 +21,9 @@ interface ErrorLogOptions {
 
 // Контекст для управления ошибками
 interface ErrorContextType {
-  showError: (message: string, type?: ErrorType) => void
+  showError: (title: string, message: string, type?: ErrorType) => void
   clearError: (id: string) => void
-  logError: (message: string, options?: ErrorLogOptions) => void
+  logError: (title: string, message: string, options?: ErrorLogOptions) => void
 }
 
 const ErrorContext = createContext<ErrorContextType | undefined>(undefined)
@@ -42,7 +43,7 @@ const ErrorAlert = ({
     >
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <h3 className="font-bold text-sm mb-1">Ошибка</h3>
+          <h3 className="font-bold text-sm mb-1">{error.title}</h3>
           <p className="text-sm">{error.message}</p>
         </div>
         <button
@@ -60,7 +61,7 @@ const ErrorAlert = ({
 export const ErrorProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
   const [errors, setErrors] = useState<ErrorNotification[]>([])
 
-  const showError = useCallback((message: string, type: ErrorType = 'CRITICAL') => {
+  const showError = useCallback((title: string, message: string, type: ErrorType = 'CRITICAL') => {
     // Проверяем, нужно ли показывать ошибку
     if (type === 'DEV_ONLY' && process.env.NODE_ENV === 'production') {
       return
@@ -72,6 +73,7 @@ export const ErrorProvider = ({ children }: { children: React.ReactNode }): JSX.
 
     const newError: ErrorNotification = {
       id: Math.random().toString(36).substr(2, 9),
+      title,
       message,
       type
     }
@@ -92,13 +94,14 @@ export const ErrorProvider = ({ children }: { children: React.ReactNode }): JSX.
   const logError = useCallback(
     (
       message: string,
+      title: string,
       { type = 'SILENT', error, details }: ErrorLogOptions = { type: 'SILENT' }
     ) => {
       // Всегда логируем в консоль для отладки
       console.error(message, { error, details })
 
       // Показываем уведомление в зависимости от типа
-      showError(message, type)
+      showError(title, message, type)
     },
     [showError]
   )

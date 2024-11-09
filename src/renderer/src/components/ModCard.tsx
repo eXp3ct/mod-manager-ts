@@ -23,20 +23,31 @@ export const ModCard: React.FC<ModCardProp> = ({ mod }) => {
           setShowModal(true)
         })
         .catch((error) => {
-          logError('Ошибка загрузки описания', {
-            type: 'CRITICAL',
-            error,
-            details: { 'Mod id': mod.id }
-          })
+          logError(
+            'Неудалось загрузить описание',
+            `Произошла ошибка при загрузке описания мода ${mod.name}`,
+            {
+              type: 'CRITICAL',
+              error,
+              details: { Mod: mod }
+            }
+          )
         })
     } catch (error) {
       console.error('Ошибка при получении данных:', error)
     }
   }
   const handleImageError = (): void => {
-    logError('Ошибка загрузки изображения', {
-      type: 'DEV_ONLY'
-    })
+    logError(
+      'Неудалось загрузить изображение',
+      `Не удалось загрузить изображение для ${mod.name}`,
+      {
+        type: 'DEV_ONLY',
+        details: {
+          Mod: mod
+        }
+      }
+    )
     setImageError(true)
   }
 
@@ -62,7 +73,7 @@ export const ModCard: React.FC<ModCardProp> = ({ mod }) => {
                 onError={handleImageError}
               />
             ) : (
-              <Image className="w-full h-full object-cover rounded-lg" />
+              <Image className="w-full h-full object-cover rounded-lg"/>
             )}
           </div>
         )}

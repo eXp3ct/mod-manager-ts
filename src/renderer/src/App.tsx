@@ -8,6 +8,8 @@ import { CategorySidebar } from './components/CategorySidebar'
 import { ModList } from './components/ModList'
 import { searchMods } from 'src/curse_client/services/searchService'
 
+const PAGINATION_LIMIT = 10000
+
 // Оборачиваем основное содержимое в компонент для доступа к хуку useError
 function AppContent(): JSX.Element {
   const { logError } = useError()
@@ -24,6 +26,7 @@ function AppContent(): JSX.Element {
     pageSize: 15
   })
   const [searchInput, setSearchInput] = useState<string>('')
+  const [pageNumber, setPageNumber] = useState<number>(1)
 
   const loaders = Object.keys(ModLoaderType)
     .filter((key) => isNaN(Number(key))) // Оставляем только строковые ключи
@@ -79,10 +82,24 @@ function AppContent(): JSX.Element {
 
   const handleCategoryChange = (category: Category | undefined): void => {
     if (category?.id === searchParams.categoryId) {
-      setSearchParams((prev) => ({ ...prev, categoryId: undefined }))
+      setSearchParams((prev) => ({ ...prev, categoryId: undefined, index: 0 }))
+      setPageNumber(1)
       return
     }
-    setSearchParams((prev) => ({ ...prev, categoryId: category?.id }))
+    setSearchParams((prev) => ({ ...prev, categoryId: category?.id, index: 0 }))
+    setPageNumber(1)
+  }
+
+  const handleIndexChangePrev = (pageNumber: number): void => {
+    const pageSize = searchParams.pageSize as number
+    setSearchParams((prev) => ({ ...prev, index: (prev.index as number) - pageSize }))
+    setPageNumber(pageNumber)
+  }
+
+  const handleIndexChangeNext = (pageNumber: number): void => {
+    const pageSize = searchParams.pageSize as number
+    setSearchParams((prev) => ({ ...prev, index: (prev.index as number) + pageSize }))
+    setPageNumber(pageNumber)
   }
 
   // Остальной код компонента остается тем же
@@ -183,7 +200,15 @@ function AppContent(): JSX.Element {
           </div>
 
           {/* Сетка карточек модов */}
-          <ModList mods={mods} />
+          <ModList
+            mods={mods}
+            pageNumber={pageNumber}
+            prevPage={handleIndexChangePrev}
+            nextPage={handleIndexChangeNext}
+            isLastPage={
+              (searchParams.index as number) + (searchParams.pageSize as number) > PAGINATION_LIMIT
+            }
+          />
         </main>
       </div>
     </div>

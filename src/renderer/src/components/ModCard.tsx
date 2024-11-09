@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Mod } from 'src/types'
 import { useError } from './ErrorProvider'
-import { Download, SquareArrowOutUpRight } from 'lucide-react'
+import { Download, SquareArrowOutUpRight, Image } from 'lucide-react'
 import HtmlModal from './HtmlModal'
 import { fetchDetails } from 'src/curse_client/services/modService'
 
@@ -54,12 +54,16 @@ export const ModCard: React.FC<ModCardProp> = ({ mod }) => {
         </div>
         {!imageError && (
           <div className="w-32 h-32 flex-shrink-0">
-            <img
-              src={mod.logo.url}
-              alt={mod.slug}
-              className="w-full h-full object-cover rounded-lg"
-              onError={handleImageError}
-            />
+            {mod.logo ? (
+              <img
+                src={mod.logo.url}
+                alt={mod.slug}
+                className="w-full h-full object-cover rounded-lg"
+                onError={handleImageError}
+              />
+            ) : (
+              <Image className="w-full h-full object-cover rounded-lg" />
+            )}
           </div>
         )}
       </div>

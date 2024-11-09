@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import ModTableRow from './ModTableRow'
 import { RelationType, SearchState } from 'src/types'
 import { fetchModFilesCached } from 'src/curse_client/services/cacheService'
+import { fetchFiles } from 'src/curse_client/services/filesService'
 
 type InstallModsModalProps = {
   onClose: () => void
@@ -10,7 +11,7 @@ type InstallModsModalProps = {
 }
 const InstallModsModal: React.FC<InstallModsModalProps> = ({ onClose, searchParams }) => {
   const { selectedMods, clearSelectedMods } = useSelectedMods()
-  const [selectedFiles, setSelectedFiles] = useState<{ [modId: string]: string }>({})
+  const [selectedFiles, setSelectedFiles] = useState<{ [modId: number]: number }>({})
 
   // Рекурсивная функция для добавления обязательных зависимостей
   const addRequiredDependencies = async (modId: number, fileId: number): Promise<void> => {
@@ -59,7 +60,12 @@ const InstallModsModal: React.FC<InstallModsModalProps> = ({ onClose, searchPara
     await addRequiredDependencies(modId, fileId)
   }
 
-  console.log(selectedFiles)
+  const handleStartInstalling = async (): Promise<void> => {
+    const fileIds = [...new Set(Object.values(selectedFiles))]
+
+    const files = await fetchFiles(fileIds)
+    const downloadUrls = [...new Set(files.map((file) => file.downloadUrl))]
+  }
 
   return (
     <div
@@ -109,7 +115,10 @@ const InstallModsModal: React.FC<InstallModsModalProps> = ({ onClose, searchPara
                 >
                   Очистить
                 </button>
-                <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                <button
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                  onClick={handleStartInstalling}
+                >
                   Установить
                 </button>
               </div>

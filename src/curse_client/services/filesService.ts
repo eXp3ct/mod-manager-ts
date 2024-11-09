@@ -1,4 +1,4 @@
-import { get } from '../apiClient'
+import { get, post } from '../apiClient'
 import { CurseData, ModLoaderType } from './../../types/index'
 import { File } from 'src/types'
 
@@ -16,5 +16,13 @@ export async function fetchModFiles(
   const url = `/v1/mods/${modId}/files?${queryParams.toString()}`
   const response = await get<CurseData<File[]>>(url)
 
+  return response.data
+}
+
+export async function fetchFiles(ids: number[]): Promise<File[]> {
+  const fileIds = {
+    fileIds: ids
+  }
+  const response = await post<CurseData<File[]>>('/v1/mods/files', fileIds)
   return response.data
 }

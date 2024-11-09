@@ -1,7 +1,8 @@
 import { useSelectedMods } from '@renderer/contexts/SelectedModsContext'
-import React from 'react'
+import React, { useState } from 'react'
 import ModTableRow from './ModTableRow'
-import { SearchState } from 'src/types'
+import { RelationType, SearchState } from 'src/types'
+import { fetchModFilesCached } from 'src/curse_client/services/cacheService'
 
 type InstallModsModalProps = {
   onClose: () => void
@@ -9,8 +10,57 @@ type InstallModsModalProps = {
 }
 const InstallModsModal: React.FC<InstallModsModalProps> = ({ onClose, searchParams }) => {
   const { selectedMods, clearSelectedMods } = useSelectedMods()
+  const [selectedFiles, setSelectedFiles] = useState<{ [modId: string]: string }>({})
 
-  console.log(selectedMods)
+  // Рекурсивная функция для добавления обязательных зависимостей
+  const addRequiredDependencies = async (modId: number, fileId: number): Promise<void> => {
+    const files = await fetchModFilesCached(
+      modId,
+      searchParams.gameVersion,
+      searchParams.modLoaderType
+    )
+    const selectedFile = files.find((file) => file.id === fileId)
+
+    if (!selectedFile) return
+
+    // Обрабатываем все зависимости выбранного файла
+    for (const dependency of selectedFile.dependencies) {
+      if (dependency.relationType === RelationType.RequiredDependency) {
+        // Если мод с этой зависимостью ещё не добавлен, то добавляем
+        if (!selectedFiles[dependency.modId]) {
+          const dependencyFiles = await fetchModFilesCached(
+            dependency.modId,
+            searchParams.gameVersion,
+            searchParams.modLoaderType
+          )
+          const primaryFile = dependencyFiles[0] // выбираем первый файл как основной, можно поменять логику
+
+          if (primaryFile) {
+            setSelectedFiles((prevSelectedFiles) => ({
+              ...prevSelectedFiles,
+              [dependency.modId]: primaryFile.id
+            }))
+
+            // Рекурсивно добавляем обязательные зависимости зависимого мода
+            await addRequiredDependencies(dependency.modId, primaryFile.id)
+          }
+        }
+      }
+    }
+  }
+
+  // Функция для обработки выбора файла
+  const handleFileSelectionChange = async (modId: number, fileId: number): Promise<void> => {
+    setSelectedFiles((prevSelectedFiles) => ({
+      ...prevSelectedFiles,
+      [modId]: fileId
+    }))
+    // Добавляем все обязательные зависимости
+    await addRequiredDependencies(modId, fileId)
+  }
+
+  console.log(selectedFiles)
+
   return (
     <div
       className="fixed z-10 inset-0 bg-black bg-opacity-50 flex justify-center items-center"
@@ -27,13 +77,8 @@ const InstallModsModal: React.FC<InstallModsModalProps> = ({ onClose, searchPara
               <thead>
                 <tr className="bg-gray-700">
                   <td className="w-1" />
-                  {/* Заголовки столбцов */}
                   <th className="p-4 text-left font-bold">Название</th>
-
-                  {/* Добавьте заголовок для нового столбца здесь */}
                   <th className="p-4 text-left font-bold">Статус</th>
-
-                  {/* Пример для кнопок действий */}
                   <th className="p-4 text-left font-bold">Дата обновления</th>
                   <th className="p-4 text-left font-bold">Файл</th>
                   <th className="p-4 text-left font-bold">Доступность</th>
@@ -42,7 +87,12 @@ const InstallModsModal: React.FC<InstallModsModalProps> = ({ onClose, searchPara
               <tbody>
                 {/* Строка для одного мода */}
                 {selectedMods.map((mod) => (
-                  <ModTableRow key={mod.id} mod={mod} searchParams={searchParams} />
+                  <ModTableRow
+                    key={mod.id}
+                    mod={mod}
+                    searchParams={searchParams}
+                    onFileSelect={handleFileSelectionChange}
+                  />
                 ))}
               </tbody>
             </table>

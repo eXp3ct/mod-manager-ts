@@ -4,12 +4,13 @@ import { File, Mod, ModStatus, ReleaseType, SearchState } from 'src/types'
 import { useError } from './ErrorProvider'
 import { fetchModFilesCached } from 'src/curse_client/services/cacheService'
 
-type ModTableRow = {
+type ModTableRowProps = {
   mod: Mod
   searchParams: Partial<SearchState>
+  onFileSelect: (modId: number, fileId: number) => void
 }
 
-const ModTableRow: React.FC<ModTableRow> = ({ mod, searchParams }) => {
+const ModTableRow: React.FC<ModTableRowProps> = ({ mod, searchParams, onFileSelect }) => {
   const { logError } = useError()
   const { toggleModSelection } = useSelectedMods()
   const [files, setFiles] = useState<File[]>([])
@@ -20,6 +21,9 @@ const ModTableRow: React.FC<ModTableRow> = ({ mod, searchParams }) => {
       .then((files) => {
         setFiles(files)
         setSelectedFile(files[0])
+        if (files[0]) {
+          onFileSelect(mod.id, files[0].id) // Инициализируем выбранный файл в родительском компоненте
+        }
       })
       .catch((error) => {
         logError(
@@ -34,6 +38,12 @@ const ModTableRow: React.FC<ModTableRow> = ({ mod, searchParams }) => {
       })
   }, [])
 
+  const handleFileChange = (fileId: number): void => {
+    const file = files.find((f) => f.id === fileId)
+    setSelectedFile(file || null)
+    onFileSelect(mod.id, fileId) // Обновляем выбранный файл в родительском состоянии
+  }
+
   return (
     <tr key={mod.id} className="border-b border-gray-700">
       <td className="p-4">
@@ -42,7 +52,6 @@ const ModTableRow: React.FC<ModTableRow> = ({ mod, searchParams }) => {
             <input
               type="checkbox"
               className="peer h-5 w-5 cursor-pointer transition-all appearance-none rounded-lg bg-slate-100 shadow hover:shadow-md border border-slate-300 checked:bg-blue-500 checked:border-blue-500"
-              id="check-custom-style"
               checked={mod.selected}
               onChange={() => toggleModSelection(mod)}
             />
@@ -73,12 +82,15 @@ const ModTableRow: React.FC<ModTableRow> = ({ mod, searchParams }) => {
         }).format(new Date(mod.dateModified))}
       </td>
       <td className="p-4">
-        <select className="bg-gray-700 text-white p-2 rounded-lg focus:outline-none w-full">
+        <select
+          className="bg-gray-700 text-white p-2 rounded-lg focus:outline-none w-full"
+          value={selectedFile?.id || ''}
+          onChange={(e) => handleFileChange(Number.parseInt(e.target.value))}
+        >
           {files.map((file) => (
             <option
               key={file.id}
               value={file.id}
-              onChange={() => setSelectedFile(file)}
               className={
                 file.releaseType === ReleaseType.Release
                   ? 'text-blue-400'

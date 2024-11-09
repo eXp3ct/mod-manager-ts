@@ -2,22 +2,19 @@ import { File, Mod, ModLoaderType, SearchState } from 'src/types'
 import { searchMods } from './searchService'
 import { fetchModFiles } from './filesService'
 
-// Кэш для хранения данных по уникальным параметрам
 const modsCache = new Map<string, Mod[]>()
 const filesCache = new Map<number, File[]>()
 
 export const fetchMods = async (searchParams: Partial<SearchState>): Promise<Mod[]> => {
-  const cacheKey = JSON.stringify(searchParams) // Формируем ключ на основе параметров
+  const cacheKey = JSON.stringify(searchParams)
 
-  // Проверяем, есть ли данные в кэше
   if (modsCache.has(cacheKey)) {
-    return modsCache.get(cacheKey) as Mod[] // Возвращаем кэшированные данные
+    return modsCache.get(cacheKey) as Mod[]
   }
 
   try {
     const mods = await searchMods(searchParams)
 
-    // Сохраняем результат в кэше
     modsCache.set(cacheKey, mods)
 
     return mods

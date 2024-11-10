@@ -41,7 +41,7 @@ function createWindow(): void {
     }
     return null
   })
-  ipcMain.handle('download-files', async (event, downloadUrls: string[], folderPath: string) => {
+  ipcMain.handle('download-files', async (_event, downloadUrls: string[], folderPath: string) => {
     try {
       for (const url of downloadUrls) {
         const fileName = path.basename(url)

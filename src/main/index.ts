@@ -27,6 +27,12 @@ function createWindow(): void {
     autoUpdater.checkForUpdatesAndNotify()
   })
 
+  autoUpdater.on('update-downloaded', () => {
+    console.log('Обновление загружено')
+    // Перезапустить приложение для установки обновления
+    autoUpdater.quitAndInstall()
+  })
+
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }

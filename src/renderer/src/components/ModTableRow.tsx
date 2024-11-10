@@ -1,5 +1,5 @@
 import { useSelectedMods } from '@renderer/contexts/SelectedModsContext'
-import React, { useEffect, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { File, Mod, ModStatus, ReleaseType, SearchState } from 'src/types'
 import { useError } from './ErrorProvider'
 import { fetchModFilesCached } from 'src/curse_client/services/cacheService'
@@ -16,7 +16,7 @@ const ModTableRow: React.FC<ModTableRowProps> = ({ mod, searchParams, onFileSele
   const [files, setFiles] = useState<File[]>([])
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  useEffect(() => {
+  useMemo(() => {
     fetchModFilesCached(mod.id, searchParams.gameVersion, searchParams.modLoaderType)
       .then((files) => {
         setFiles(files)
@@ -36,7 +36,7 @@ const ModTableRow: React.FC<ModTableRowProps> = ({ mod, searchParams, onFileSele
           }
         )
       })
-  }, [])
+  }, [mod, searchParams])
 
   const handleFileChange = (fileId: number): void => {
     const file = files.find((f) => f.id === fileId)

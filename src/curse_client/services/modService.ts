@@ -1,4 +1,4 @@
-import { Category, CurseData } from '../../types'
+import { Category, CurseData, Mod } from 'src/types'
 import { get } from '../apiClient'
 
 const CATEGORIES_URL = '/v1/categories?gameId=432&classId=6'
@@ -14,5 +14,10 @@ export async function fetchDetails(modId: number): Promise<string> {
       Accept: 'application/json'
     }
   })
+  return response.data
+}
+
+export async function fetchModById(modId: number): Promise<Mod> {
+  const response = await get<CurseData<Mod>>(`/v1/mods/${modId}`)
   return response.data
 }

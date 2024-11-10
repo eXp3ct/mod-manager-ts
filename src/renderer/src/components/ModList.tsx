@@ -18,6 +18,7 @@ export const ModList: React.FC<ModListProps> = ({
   prevPage,
   isLastPage
 }) => {
+  const lastPage = mods.length <= 0
   return (
     <>
       {mods.length > 0 ? (
@@ -35,7 +36,7 @@ export const ModList: React.FC<ModListProps> = ({
         pageNumber={pageNumber}
         prevPage={prevPage}
         nextPage={nextPage}
-        isLastPage={isLastPage}
+        isLastPage={isLastPage || lastPage}
       />
     </>
   )

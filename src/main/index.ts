@@ -1,7 +1,9 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import axios from 'axios'
+import fs from 'fs'
 
 function createWindow(): void {
   // Create the browser window.
@@ -28,6 +30,44 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
+  // Обработка вызова для открытия окна выбора папки
+  ipcMain.handle('select-folder', async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory'] // Настройка на выбор папки
+    })
+
+    if (!result.canceled && result.filePaths.length > 0) {
+      return result.filePaths[0] // Возвращаем путь к выбранной папке
+    }
+    return null
+  })
+  ipcMain.handle('download-files', async (event, downloadUrls: string[], folderPath: string) => {
+    try {
+      for (const url of downloadUrls) {
+        const fileName = path.basename(url)
+        const filePath = path.join(folderPath, fileName)
+
+        const response = await axios.get(url, {
+          responseType: 'stream' // Указываем потоковую передачу данных
+        })
+
+        // Создаем запись в файл
+        const writer = fs.createWriteStream(filePath)
+        response.data.pipe(writer)
+
+        // Ждем завершения записи
+        await new Promise((resolve, reject) => {
+          writer.on('finish', resolve)
+          writer.on('error', reject)
+        })
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error('Ошибка при скачивании файлов:', error)
+      return { success: false, error }
+    }
+  })
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -52,7 +92,6 @@ app.whenReady().then(() => {
   })
 
   // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
 
   createWindow()
 

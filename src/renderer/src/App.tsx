@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ErrorProvider, useError } from './components/ErrorProvider'
 import { fetchMinecraftVersions } from 'src/curse_client/services/minecraftService'
 import { fetchCategories } from 'src/curse_client/services/modService'
@@ -41,7 +41,7 @@ function AppContent(): JSX.Element {
     .filter((key) => isNaN(Number(key))) // Оставляем только строковые ключи
     .map((key) => key as keyof typeof SearchSortField)
 
-  useEffect(() => {
+  useMemo(() => {
     fetchMods(searchParams)
       .then(setMods)
       .catch((error) => {
@@ -70,19 +70,23 @@ function AppContent(): JSX.Element {
   }, [logError])
 
   const handleVersionChange = (gameVersion: string): void => {
-    setSearchParams((prev) => ({ ...prev, gameVersion }))
+    setSearchParams((prev) => ({ ...prev, gameVersion, index: 0 }))
+    setPageNumber(1)
   }
 
   const handleModLoaderChange = (modLoaderType: ModLoaderType): void => {
-    setSearchParams((prev) => ({ ...prev, modLoaderType }))
+    setSearchParams((prev) => ({ ...prev, modLoaderType, index: 0 }))
+    setPageNumber(1)
   }
 
   const handleSortFieldChange = (sortField: SearchSortField): void => {
-    setSearchParams((prev) => ({ ...prev, sortField }))
+    setSearchParams((prev) => ({ ...prev, sortField, index: 0 }))
+    setPageNumber(1)
   }
 
   const handleSearchFilterChange = (filter: string): void => {
-    setSearchParams((prev) => ({ ...prev, searchFilter: filter }))
+    setSearchParams((prev) => ({ ...prev, searchFilter: filter, index: 0 }))
+    setPageNumber(1)
   }
 
   const handleCategoryChange = (category: Category | undefined): void => {
@@ -173,7 +177,7 @@ function AppContent(): JSX.Element {
                   className="bg-gray-700 text-white p-2 rounded-lg focus:outline-none w-full"
                 >
                   {loaders.map((loader) => (
-                    <option key={loader.length} value={ModLoaderType[loader]}>
+                    <option key={loader} value={ModLoaderType[loader]}>
                       {loader}
                     </option>
                   ))}

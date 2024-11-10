@@ -72,7 +72,7 @@ export const ErrorProvider = ({ children }: { children: React.ReactNode }): JSX.
     }
 
     const newError: ErrorNotification = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: (Math.random() * 100).toString(36).substr(2, 9),
       title,
       message,
       type

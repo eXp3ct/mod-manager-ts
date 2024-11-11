@@ -14,6 +14,7 @@ function createWindow(): void {
     height: 670,
     show: false,
     autoHideMenuBar: true,
+    icon: icon,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -45,7 +46,7 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.mod-manager')
+  electronApp.setAppUserModelId('mod-manager')
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -62,6 +63,7 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 
+  autoUpdater.checkForUpdatesAndNotify()
   autoUpdater.on('update-downloaded', () => {
     console.log('Обновление загружено')
     // Перезапустить приложение для установки обновления

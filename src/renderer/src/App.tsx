@@ -10,6 +10,7 @@ import { ArrowDownWideNarrow, ArrowUpWideNarrow } from 'lucide-react'
 import { fetchMods } from 'src/curse_client/services/cacheService'
 import { SelectedModsProvider } from './contexts/SelectedModsContext'
 import InstallModsModal from './components/InstallModsModal'
+import CategoriesListSkeleton from './components/CategorySideBarSkeleton'
 
 const PAGINATION_LIMIT = 10000
 
@@ -32,18 +33,24 @@ function AppContent(): JSX.Element {
   const [searchInput, setSearchInput] = useState<string>('')
   const [pageNumber, setPageNumber] = useState<number>(1)
   const [showInstallModal, setShowInstallModal] = useState<boolean>(false)
+  const [isModLoading, setModIsLoading] = useState<boolean>(true)
+  const [isCategoriesLoading, setIsCategoriesLoading] = useState<boolean>(true)
 
   const loaders = Object.keys(ModLoaderType)
-    .filter((key) => isNaN(Number(key))) // Оставляем только строковые ключи
+    .filter((key) => isNaN(Number(key)))
     .map((key) => key as keyof typeof ModLoaderType)
 
   const sortFields = Object.keys(SearchSortField)
-    .filter((key) => isNaN(Number(key))) // Оставляем только строковые ключи
+    .filter((key) => isNaN(Number(key)))
     .map((key) => key as keyof typeof SearchSortField)
 
   useMemo(() => {
+    setModIsLoading(true)
     fetchMods(searchParams)
-      .then(setMods)
+      .then((mods) => {
+        setMods(mods)
+        setModIsLoading(false)
+      })
       .catch((error) => {
         logError('Ошибка поиска', 'Были введены некорреткные данные', {
           type: 'DEV_ONLY',
@@ -54,10 +61,12 @@ function AppContent(): JSX.Element {
   }, [searchParams])
 
   useEffect(() => {
+    setIsCategoriesLoading(true)
     Promise.all([fetchCategories(), fetchMinecraftVersions(true)])
       .then((value) => {
         setCategories(value[0])
         setVersions(value[1])
+        setIsCategoriesLoading(false)
       })
       .catch((error) => {
         // Логируем ошибку загрузки как DEV_ONLY
@@ -138,11 +147,15 @@ function AppContent(): JSX.Element {
 
       <div className="flex h-full">
         {/* Боковая панель с прокруткой */}
-        <CategorySidebar
-          categories={categories}
-          onChange={handleCategoryChange}
-          selectedCategoryId={searchParams.categoryId}
-        />
+        {isCategoriesLoading ? (
+          <CategoriesListSkeleton count={16} />
+        ) : (
+          <CategorySidebar
+            categories={categories}
+            onChange={handleCategoryChange}
+            selectedCategoryId={searchParams.categoryId}
+          />
+        )}
 
         {/* Основная панель с прокруткой */}
         <main className="flex-1 p-6 overflow-y-auto">
@@ -240,6 +253,7 @@ function AppContent(): JSX.Element {
             isLastPage={
               (searchParams.index as number) + (searchParams.pageSize as number) > PAGINATION_LIMIT
             }
+            isLoading={isModLoading}
           />
         </main>
       </div>

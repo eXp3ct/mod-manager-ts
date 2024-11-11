@@ -57,7 +57,7 @@ export const ModCard: React.FC<ModCardProp> = ({ mod }) => {
   return (
     <div
       key={mod.id}
-      className="bg-gray-800 p-4 rounded-lg shadow-md hover:bg-gray-700 transition-colors h-full flex flex-col hover:cursor-pointer"
+      className="bg-gray-800 p-4 rounded-lg shadow-sm hover:bg-gray-700 transition-colors h-full flex flex-col hover:cursor-pointer"
       onClick={() => toggleModSelection(mod)}
     >
       <div className="flex justify-between items-start gap-4 flex-1">

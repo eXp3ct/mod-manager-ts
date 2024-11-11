@@ -62,10 +62,17 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 
+  // Отслеживание прогресса загрузки обновления
+  autoUpdater.on('download-progress', (progressObj) => {
+    const mainWindow = BrowserWindow.getAllWindows()[0]
+    const progressPercent = progressObj.percent || 0
+    mainWindow.webContents.send('update-download-progress', progressPercent)
+  })
+
+  // После завершения загрузки
   autoUpdater.on('update-downloaded', () => {
-    console.log('Обновление загружено')
-    // Перезапустить приложение для установки обновления
-    autoUpdater.quitAndInstall()
+    const mainWindow = BrowserWindow.getAllWindows()[0]
+    mainWindow.webContents.send('update-downloaded')
   })
 
   // Обработка вызова для открытия окна выбора папки

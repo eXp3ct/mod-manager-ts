@@ -10,6 +10,7 @@ import { ArrowDownWideNarrow, ArrowUpWideNarrow } from 'lucide-react'
 import { fetchMods } from 'src/curse_client/services/cacheService'
 import { SelectedModsProvider } from './contexts/SelectedModsContext'
 import InstallModsModal from './components/InstallModsModal'
+import { ipcRenderer } from 'electron'
 
 const PAGINATION_LIMIT = 10000
 
@@ -32,6 +33,8 @@ function AppContent(): JSX.Element {
   const [searchInput, setSearchInput] = useState<string>('')
   const [pageNumber, setPageNumber] = useState<number>(1)
   const [showInstallModal, setShowInstallModal] = useState<boolean>(false)
+  const [downloadProgress, setDownloadProgress] = useState<number | null>(null)
+  const [isUpdateReady, setIsUpdateReady] = useState(false)
 
   const loaders = Object.keys(ModLoaderType)
     .filter((key) => isNaN(Number(key))) // Оставляем только строковые ключи
@@ -60,7 +63,6 @@ function AppContent(): JSX.Element {
         setVersions(value[1])
       })
       .catch((error) => {
-        // Логируем ошибку загрузки как DEV_ONLY
         logError('Ошибка загрузки данных', 'Выбраны некорреткные данные', {
           type: 'CRITICAL',
           error,
@@ -68,6 +70,29 @@ function AppContent(): JSX.Element {
         })
       })
   }, [logError])
+
+  useEffect(() => {
+    // Отслеживание прогресса загрузки обновления
+    ipcRenderer.on('update-download-progress', (_event, progressPercent) => {
+      setDownloadProgress(progressPercent)
+    })
+
+    // Событие окончания загрузки обновления
+    ipcRenderer.on('update-downloaded', () => {
+      setIsUpdateReady(true)
+      new Notification('Обновление загружено', {
+        body: 'Приложение перезапустится для установки новой версии'
+      })
+      setTimeout(() => {
+        ipcRenderer.send('confirm-update')
+      }, 5000)
+    })
+
+    return (): void => {
+      ipcRenderer.removeAllListeners('update-download-progress')
+      ipcRenderer.removeAllListeners('update-downloaded')
+    }
+  }, [])
 
   const handleVersionChange = (gameVersion: string): void => {
     setSearchParams((prev) => ({ ...prev, gameVersion, index: 0 }))
@@ -125,6 +150,17 @@ function AppContent(): JSX.Element {
       {/* Навбар */}
       <nav className="flex items-center justify-between bg-gray-800 p-4 shadow-lg">
         <h1 className="text-2xl font-bold">Minecraft Mod Manager</h1>
+
+        {/* Прогресс-бар загрузки обновления */}
+        {downloadProgress !== null && (
+          <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+            <div
+              className="bg-blue-500 h-2 rounded-full"
+              style={{ width: `${downloadProgress}%` }}
+            />
+          </div>
+        )}
+
         <input
           type="text"
           placeholder="Поиск..."
@@ -135,6 +171,15 @@ function AppContent(): JSX.Element {
           }}
         />
       </nav>
+      {/* Если обновление готово, модальное окно или уведомление */}
+      {isUpdateReady && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-4 rounded-lg shadow-lg text-center">
+            <h2 className="text-xl font-bold">Обновление загружено</h2>
+            <p>Приложение будет перезапущено для установки новой версии.</p>
+          </div>
+        </div>
+      )}
 
       <div className="flex h-full">
         {/* Боковая панель с прокруткой */}

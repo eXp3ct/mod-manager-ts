@@ -10,11 +10,13 @@
     "url": "git+https://github.com/eXp3ct/mod-manager-ts"
   },
   "build": {
-    "publish": [{
+    "publish": [
+      {
         "provider": "github",
         "owner": "eXp3ct",
         "repo": "mod-manager-ts"
-    }]
+      }
+    ]
   },
   "scripts": {
     "format": "prettier --write .",

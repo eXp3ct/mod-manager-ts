@@ -15,13 +15,14 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     icon: icon,
+    title: 'mod-manager',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
   })
-
+  autoUpdater.checkForUpdatesAndNotify()
   mainWindow.on('ready-to-show', () => {
     mainWindow.maximize()
     mainWindow.show()
@@ -63,7 +64,6 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 
-  autoUpdater.checkForUpdatesAndNotify()
   autoUpdater.on('update-downloaded', () => {
     console.log('Обновление загружено')
     // Перезапустить приложение для установки обновления

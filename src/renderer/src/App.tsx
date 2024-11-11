@@ -133,7 +133,9 @@ function AppContent(): JSX.Element {
     <div className="flex flex-col h-full bg-gray-900 text-white">
       {/* Навбар */}
       <nav className="flex items-center justify-between bg-gray-800 p-4 shadow-lg">
-        <h1 className="text-2xl font-bold">Minecraft Mod Manager</h1>
+        <h1 className="text-2xl font-bold">
+          Minecraft Mod Manager {import.meta.env.VITE_APP_VERSION}
+        </h1>
         <input
           type="text"
           placeholder="Поиск..."

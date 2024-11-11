@@ -1,10 +1,12 @@
 import { useSelectedMods } from '@renderer/contexts/SelectedModsContext'
 import React, { useState } from 'react'
 import ModTableRow from './ModTableRow'
-import { File, RelationType, SearchState } from 'src/types'
+import { File, Mod, RelationType, SearchState } from 'src/types'
 import { fetchModFilesCached } from 'src/curse_client/services/cacheService'
 import { fetchFiles } from 'src/curse_client/services/filesService'
 import { useError } from './ErrorProvider'
+import icon from '../../../../resources/icon.png'
+import { fetchModById } from 'src/curse_client/services/modService'
 
 type InstallModsModalProps = {
   onClose: () => void
@@ -18,6 +20,7 @@ const InstallModsModal: React.FC<InstallModsModalProps> = ({ onClose, searchPara
   const [isInstalling, setIsInstalling] = useState<boolean>(false)
   const [progress, setProgress] = useState<number>(0)
   const [canClose, setCanClose] = useState<boolean>(true)
+  const [currentMod, setCurrentMod] = useState<Mod>()
 
   // Рекурсивная функция для добавления обязательных зависимостей
   const addRequiredDependencies = async (modId: number, fileId: number): Promise<void> => {
@@ -93,8 +96,15 @@ const InstallModsModal: React.FC<InstallModsModalProps> = ({ onClose, searchPara
     setCanClose(false)
     for (let i = 0; i < downloadUrls.length; i++) {
       const url = downloadUrls[i]
-      await window.electron.downloadFiles([url], tempPath ? tempPath : fodlerPath)
 
+      const file = files.find((file) => file.downloadUrl === url)
+      let mod = selectedMods.find((mod) => mod.id === file?.modId)
+      if (!mod) {
+        if (file) mod = await fetchModById(file.modId)
+      }
+      setCurrentMod(mod)
+
+      await window.electron.downloadFiles([url], tempPath ? tempPath : fodlerPath)
       // Обновляем прогресс после каждого файла
       setProgress(((i + 1) / downloadUrls.length) * 100)
     }
@@ -102,6 +112,11 @@ const InstallModsModal: React.FC<InstallModsModalProps> = ({ onClose, searchPara
     setCanClose(true)
     setIsInstalling(false)
     setProgress(0)
+
+    new window.Notification('Установлено', {
+      body: `Успешно установлено ${selectedMods.length} модов и их зависимостей в ${tempPath ? tempPath : fodlerPath}`,
+      icon: icon
+    })
   }
 
   return (
@@ -147,7 +162,12 @@ const InstallModsModal: React.FC<InstallModsModalProps> = ({ onClose, searchPara
               </div>
 
               {isInstalling && (
-                <div className="flex-1 bg-gray-200 rounded-full h-4 mx-4 overflow-hidden">
+                <div className="flex-1 bg-gray-200 rounded-full h-4 mx-4 overflow-hidden relative">
+                  {/* Текст в центре прогресс-бара */}
+                  <p className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-gray-700">
+                    {currentMod?.name}
+                  </p>
+                  {/* Заполнение прогресс-бара */}
                   <div
                     className="bg-blue-500 h-4 rounded-full transition-all duration-300"
                     style={{ width: `${progress}%` }}

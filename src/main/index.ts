@@ -24,13 +24,6 @@ function createWindow(): void {
   mainWindow.on('ready-to-show', () => {
     mainWindow.maximize()
     mainWindow.show()
-    autoUpdater.checkForUpdatesAndNotify()
-  })
-
-  autoUpdater.on('update-downloaded', () => {
-    console.log('Обновление загружено')
-    // Перезапустить приложение для установки обновления
-    autoUpdater.quitAndInstall()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -38,44 +31,6 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
-  // Обработка вызова для открытия окна выбора папки
-  ipcMain.handle('select-folder', async () => {
-    const result = await dialog.showOpenDialog({
-      properties: ['openDirectory'] // Настройка на выбор папки
-    })
-
-    if (!result.canceled && result.filePaths.length > 0) {
-      return result.filePaths[0] // Возвращаем путь к выбранной папке
-    }
-    return null
-  })
-  ipcMain.handle('download-files', async (_event, downloadUrls: string[], folderPath: string) => {
-    try {
-      for (const url of downloadUrls) {
-        const fileName = path.basename(url)
-        const filePath = path.join(folderPath, fileName)
-
-        const response = await axios.get(url, {
-          responseType: 'stream' // Указываем потоковую передачу данных
-        })
-
-        // Создаем запись в файл
-        const writer = fs.createWriteStream(filePath)
-        response.data.pipe(writer)
-
-        // Ждем завершения записи
-        await new Promise((resolve, reject) => {
-          writer.on('finish', resolve)
-          writer.on('error', reject)
-        })
-      }
-
-      return { success: true }
-    } catch (error) {
-      console.error('Ошибка при скачивании файлов:', error)
-      return { success: false, error }
-    }
-  })
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -90,7 +45,7 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('mod-manager')
+  electronApp.setAppUserModelId('com.mod-manager')
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -99,14 +54,60 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-
   createWindow()
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+
+  autoUpdater.on('update-downloaded', () => {
+    console.log('Обновление загружено')
+    // Перезапустить приложение для установки обновления
+    autoUpdater.quitAndInstall()
+  })
+
+  // Обработка вызова для открытия окна выбора папки
+  ipcMain.handle('select-folder', async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory']
+    })
+
+    if (!result.canceled && result.filePaths.length > 0) {
+      return result.filePaths[0]
+    }
+    return null
+  })
+
+  ipcMain.handle('download-files', async (_event, downloadUrls: string[], folderPath: string) => {
+    try {
+      for (const url of downloadUrls) {
+        const fileName = path.basename(url)
+        const filePath = path.join(folderPath, fileName)
+
+        const response = await axios.get(url, {
+          responseType: 'stream' // Указываем потоковую передачу данных
+        })
+
+        // Создаем запись в файл
+        const writer = fs.createWriteStream(filePath)
+        if (!fs.existsSync(filePath)) {
+          response.data.pipe(writer)
+        }
+
+        // Ждем завершения записи
+        await new Promise((resolve, reject) => {
+          writer.on('finish', resolve)
+          writer.on('error', reject)
+        })
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error('Ошибка при скачивании файлов:', error)
+      return { success: false, error }
+    }
   })
 })
 
@@ -118,6 +119,3 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
-
-// In this file you can include the rest of your app"s specific main process
-// code. You can also put them in separate files and require them here.

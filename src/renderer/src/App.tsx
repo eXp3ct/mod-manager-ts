@@ -134,7 +134,6 @@ function AppContent(): JSX.Element {
             if (e.key === 'Enter') handleSearchFilterChange(searchInput)
           }}
         />
-        <button className="bg-blue-500 px-4 py-2 rounded hover:bg-blue-600">Обновить</button>
       </nav>
 
       <div className="flex h-full">

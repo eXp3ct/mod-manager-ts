@@ -9,8 +9,8 @@ declare global {
   interface MyElectronAPI extends ElectronAPI {
     selectFolder: () => Promise<string | null>
     downloadFiles: (
-      downloadUrls: string[],
+      downloadUrls: string,
       folderPath: string
-    ) => Promise<{ success: boolean; error?: unknown }>
+    ) => Promise<{ success: boolean; error?: unknown; md5Hash: string; sha1Hash: string }>
   }
 }

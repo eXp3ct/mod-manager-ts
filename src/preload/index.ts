@@ -12,8 +12,8 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', {
       ...electronAPI,
       selectFolder: async () => await ipcRenderer.invoke('select-folder'),
-      downloadFiles: async (downloadUrls: string[], folderPath: string) =>
-        await ipcRenderer.invoke('download-files', downloadUrls, folderPath)
+      downloadFiles: async (downloadUrls: string, folderPath: string) =>
+        await ipcRenderer.invoke('download-file', downloadUrls, folderPath)
     })
     contextBridge.exposeInMainWorld('api', api)
   } catch (error) {

@@ -5,6 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import axios from 'axios'
 import fs from 'fs'
 import { autoUpdater } from 'electron-updater'
+import crypto from 'crypto'
 
 autoUpdater.setFeedURL({
   provider: 'github',
@@ -97,32 +98,48 @@ app.whenReady().then(() => {
     return null
   })
 
-  ipcMain.handle('download-files', async (_event, downloadUrls: string[], folderPath: string) => {
+  ipcMain.handle('download-file', async (_event, url: string, folderPath: string) => {
     try {
-      for (const url of downloadUrls) {
-        const fileName = path.basename(url)
-        const filePath = path.join(folderPath, fileName)
+      const fileName = path.basename(url)
+      const filePath = path.join(folderPath, fileName)
 
-        const response = await axios.get(url, {
-          responseType: 'stream' // Указываем потоковую передачу данных
-        })
+      // Проверяем существует ли файл
+      if (fs.existsSync(filePath)) {
+        // Читаем как бинарные данные
+        const fileContent = fs.readFileSync(filePath)
+        const md5Hash = crypto
+          .createHash('md5')
+          .update(fileContent) // fileContent это Buffer из response
+          .digest('hex')
+        const sha1Hash = crypto.createHash('sha1').update(fileContent).digest('hex')
 
-        // Создаем запись в файл
-        const writer = fs.createWriteStream(filePath)
-        if (!fs.existsSync(filePath)) {
-          response.data.pipe(writer)
+        return {
+          success: true,
+          sha1Hash: sha1Hash,
+          md5Hash: md5Hash
         }
-
-        // Ждем завершения записи
-        await new Promise((resolve, reject) => {
-          writer.on('finish', resolve)
-          writer.on('error', reject)
-        })
       }
 
-      return { success: true }
+      const response = await axios.get(url, {
+        responseType: 'arraybuffer' // Важно! Меняем на arraybuffer
+      })
+
+      // Записываем файл
+      fs.writeFileSync(filePath, response.data)
+      const fileContent = fs.readFileSync(filePath)
+      const md5Hash = crypto
+        .createHash('md5')
+        .update(fileContent) // fileContent это Buffer из response
+        .digest('hex')
+      const sha1Hash = crypto.createHash('sha1').update(fileContent).digest('hex')
+
+      return {
+        success: true,
+        sha1Hash: sha1Hash,
+        md5Hash: md5Hash
+      }
     } catch (error) {
-      console.error('Ошибка при скачивании файлов:', error)
+      console.error('Ошибка при скачивании файла:', error)
       return { success: false, error }
     }
   })

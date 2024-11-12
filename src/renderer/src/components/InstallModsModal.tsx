@@ -7,6 +7,7 @@ import { fetchFiles } from 'src/curse_client/services/filesService'
 import { useError } from './ErrorProvider'
 import icon from '../../../../resources/icon.png'
 import { fetchModById } from 'src/curse_client/services/modService'
+import { CheckCircle, XCircle } from 'lucide-react'
 
 type InstallModsModalProps = {
   onClose: () => void
@@ -21,6 +22,11 @@ const InstallModsModal: React.FC<InstallModsModalProps> = ({ onClose, searchPara
   const [progress, setProgress] = useState<number>(0)
   const [canClose, setCanClose] = useState<boolean>(true)
   const [currentMod, setCurrentMod] = useState<Mod>()
+  const [currentSha1Hash, setCurrentSha1Hash] = useState<string>('')
+  const [currentMd5Hash, setCurrentMd5Hash] = useState<string>('')
+  const [md5Match, setMd5Match] = useState<boolean>(false)
+  const [sha1Match, setSha1Match] = useState<boolean>(false)
+  const [isError, setIsError] = useState<boolean>(false)
 
   // Рекурсивная функция для добавления обязательных зависимостей
   const addRequiredDependencies = async (modId: number, fileId: number): Promise<void> => {
@@ -98,14 +104,27 @@ const InstallModsModal: React.FC<InstallModsModalProps> = ({ onClose, searchPara
       const url = downloadUrls[i]
 
       const file = files.find((file) => file.downloadUrl === url)
+      const fileMd5Hash = file?.hashes[1].value
+      const fileSha1Hash = file?.hashes[0].value
       let mod = selectedMods.find((mod) => mod.id === file?.modId)
       if (!mod) {
         if (file) mod = await fetchModById(file.modId)
       }
       setCurrentMod(mod)
 
-      await window.electron.downloadFiles([url], tempPath ? tempPath : fodlerPath)
-      // Обновляем прогресс после каждого файла
+      const result = await window.electron.downloadFiles(url, tempPath ? tempPath : fodlerPath)
+      setCurrentMd5Hash(result.md5Hash)
+      setCurrentSha1Hash(result.sha1Hash)
+      setMd5Match(fileMd5Hash === result.md5Hash)
+      setSha1Match(fileSha1Hash === result.sha1Hash)
+
+      if (fileMd5Hash !== result.md5Hash || fileSha1Hash !== result.sha1Hash) {
+        setIsInstalling(false)
+        setCanClose(true)
+        setIsError(true)
+        return
+      }
+
       setProgress(((i + 1) / downloadUrls.length) * 100)
     }
 
@@ -155,27 +174,50 @@ const InstallModsModal: React.FC<InstallModsModalProps> = ({ onClose, searchPara
             </table>
 
             <div className="flex items-center justify-between mt-6 gap-4">
-              <div className="text-white px-4 py-2 rounded-lg">
+              <div className="text-white px-4 py-2 rounded-lg shrink-0">
                 *<span className="text-blue-400 mr-2">Релиз</span>
                 <span className="text-orange-400 mr-2">Бета</span>
                 <span className="text-yellow-400 mr-2">Альфа</span>
               </div>
 
-              {isInstalling && (
-                <div className="flex-1 bg-gray-200 rounded-full h-4 mx-4 overflow-hidden relative">
-                  {/* Текст в центре прогресс-бара */}
-                  <p className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-gray-700">
-                    {currentMod?.name}
-                  </p>
-                  {/* Заполнение прогресс-бара */}
-                  <div
-                    className="bg-blue-500 h-4 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  ></div>
+              {(isInstalling || isError) && (
+                <div className="flex-1 flex flex-col gap-2">
+                  {/* Прогресс бар */}
+                  <div className="bg-gray-200 rounded-full h-4 overflow-hidden relative">
+                    <p className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-gray-700">
+                      {currentMod?.name}
+                    </p>
+                    <div
+                      className="bg-blue-500 h-4 rounded-full transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+
+                  {/* MD5 хеш */}
+                  <div className="flex items-center gap-2 text-sm text-gray-200">
+                    <span className="font-medium">MD5:</span>
+                    <span className="font-mono">{currentMd5Hash}</span>
+                    {md5Match ? (
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-red-500" />
+                    )}
+                  </div>
+
+                  {/* SHA1 хеш */}
+                  <div className="flex items-center gap-2 text-sm text-gray-200">
+                    <span className="font-medium">SHA1:</span>
+                    <span className="font-mono">{currentSha1Hash}</span>
+                    {sha1Match ? (
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-red-500" />
+                    )}
+                  </div>
                 </div>
               )}
 
-              <div className="flex gap-4">
+              <div className="flex gap-4 shrink-0">
                 <button
                   className={`px-4 py-2 rounded-lg transition-colors duration-300 ${
                     isInstalling

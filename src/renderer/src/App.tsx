@@ -14,7 +14,6 @@ import CategoriesListSkeleton from './components/CategorySideBarSkeleton'
 
 const PAGINATION_LIMIT = 10000
 
-// Оборачиваем основное содержимое в компонент для доступа к хуку useError
 function AppContent(): JSX.Element {
   const { logError } = useError()
   const [mods, setMods] = useState<Mod[]>([])

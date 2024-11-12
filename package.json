@@ -1,6 +1,6 @@
 {
   "name": "mod-manager",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "Minecraft mod manager to browsing and installing mods via Curse Forge library",
   "main": "./out/main/index.js",
   "author": "https://github.com/eXp3ct",
@@ -8,6 +8,13 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/eXp3ct/mod-manager-ts"
+  },
+  "build": {
+    "publish": {
+      "provider": "github",
+      "owner": "eXp3ct",
+      "repo": "mod-manager-ts"
+    }
   },
   "scripts": {
     "format": "prettier --write .",

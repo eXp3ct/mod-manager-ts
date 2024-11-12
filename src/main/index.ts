@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, Notification } from 'electron'
 import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -22,7 +22,7 @@ function createWindow(): void {
       sandbox: false
     }
   })
-  autoUpdater.checkForUpdatesAndNotify()
+  autoUpdater.checkForUpdates()
   mainWindow.on('ready-to-show', () => {
     mainWindow.maximize()
     mainWindow.show()
@@ -62,6 +62,14 @@ app.whenReady().then(() => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+
+  autoUpdater.on('update-available', (info) => {
+    new Notification({
+      title: 'Доступно обновление',
+      body: `Началось скачивание версии ${info.version}. Приложение закроется и перезагрузится автоматически`,
+      icon: icon
+    }).show()
   })
 
   autoUpdater.on('update-downloaded', () => {

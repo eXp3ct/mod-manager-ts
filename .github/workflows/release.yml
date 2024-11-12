@@ -7,11 +7,7 @@ on:
 
 jobs:
   release:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [windows-latest]
+    runs-on: windows-latest
 
     steps:
       - name: Check out Git repository
@@ -27,12 +23,12 @@ jobs:
 
       - name: Setup .env config
         run: |
-          echo "VITE_API_KEY=${{ secrets.CURSE_API_KEY }}" > .env.local
+          printf "VITE_API_KEY='%s'\n" "${{ secrets.CURSE_API_KEY }}" > .env.local
           dir
           more .env.local
 
-      - name: build-win
-        if: matrix.os == 'windows-latest'
+
+      - name: Build-win
         run: npm run build:win
 
       - name: release

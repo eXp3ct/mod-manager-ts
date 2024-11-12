@@ -11,6 +11,7 @@ import { fetchMods } from 'src/curse_client/services/cacheService'
 import { SelectedModsProvider } from './contexts/SelectedModsContext'
 import InstallModsModal from './components/InstallModsModal'
 import CategoriesListSkeleton from './components/CategorySideBarSkeleton'
+import icon from '../../../resources/icon.png'
 
 const PAGINATION_LIMIT = 10000
 
@@ -34,6 +35,8 @@ function AppContent(): JSX.Element {
   const [showInstallModal, setShowInstallModal] = useState<boolean>(false)
   const [isModLoading, setModIsLoading] = useState<boolean>(true)
   const [isCategoriesLoading, setIsCategoriesLoading] = useState<boolean>(true)
+  const [updateProgress, setUpdateProgress] = useState<number>(0)
+  const [isDownloadingUpdate, setIsDownloadingUpdate] = useState<boolean>(false)
 
   const loaders = Object.keys(ModLoaderType)
     .filter((key) => isNaN(Number(key)))
@@ -42,6 +45,29 @@ function AppContent(): JSX.Element {
   const sortFields = Object.keys(SearchSortField)
     .filter((key) => isNaN(Number(key)))
     .map((key) => key as keyof typeof SearchSortField)
+
+  useEffect(() => {
+    // Слушаем события от основного процесса
+    window.electron.ipcRenderer.on('update-progress', (_, progress) => {
+      setUpdateProgress(progress)
+    })
+
+    window.electron.ipcRenderer.on('update-available', () => {
+      setIsDownloadingUpdate(true) // Показать прогресс-бар при начале загрузки
+      new Notification('Доступно обновление', {
+        body: 'Началось скачивание новой версии',
+        icon: icon
+      })
+    })
+
+    window.electron.ipcRenderer.on('update-downloaded', () => {
+      setIsDownloadingUpdate(false) // Скрыть прогресс-бар после загрузки
+      new Notification('Обновление загружено', {
+        body: 'Приложение будет перезапущено для установки обновления.',
+        icon: icon
+      })
+    })
+  }, [])
 
   useMemo(() => {
     setModIsLoading(true)
@@ -132,9 +158,19 @@ function AppContent(): JSX.Element {
     <div className="flex flex-col h-full bg-gray-900 text-white">
       {/* Навбар */}
       <nav className="flex items-center justify-between bg-gray-800 p-4 shadow-lg">
-        <h1 className="text-2xl font-bold">
-          Minecraft Mod Manager {import.meta.env.VITE_APP_VERSION}
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold">
+            Minecraft Mod Manager {import.meta.env.VITE_APP_VERSION}
+          </h1>
+          {isDownloadingUpdate && (
+            <div className="bg-gray-200 rounded-full h-4 mt-2 overflow-hidden">
+              <div
+                className="bg-blue-500 h-4 transition-all duration-300"
+                style={{ width: `${updateProgress}%` }}
+              />
+            </div>
+          )}
+        </div>
         <input
           type="text"
           placeholder="Поиск..."

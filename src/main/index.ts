@@ -1,10 +1,16 @@
-import { app, shell, BrowserWindow, ipcMain, dialog, Notification } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import axios from 'axios'
 import fs from 'fs'
 import { autoUpdater } from 'electron-updater'
+
+autoUpdater.setFeedURL({
+  provider: 'github',
+  owner: 'eXp3ct',
+  repo: 'mod-manager-ts'
+})
 
 function createWindow(): void {
   // Create the browser window.
@@ -31,6 +37,21 @@ function createWindow(): void {
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
+  })
+
+  autoUpdater.on('update-available', () => {
+    // Уведомить рендер-процесс о начале загрузки
+    mainWindow.webContents.send('update-available')
+  })
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    const progress = Math.round(progressObj.percent) // Прогресс в процентах
+    mainWindow.webContents.send('update-progress', progress)
+  })
+
+  autoUpdater.on('update-downloaded', () => {
+    mainWindow.webContents.send('update-downloaded') // Сообщить, что обновление загружено
+    autoUpdater.quitAndInstall() // Перезапустить приложение для установки обновления
   })
 
   // HMR for renderer base on electron-vite cli.
@@ -62,20 +83,6 @@ app.whenReady().then(() => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
-
-  autoUpdater.on('update-available', (info) => {
-    new Notification({
-      title: 'Доступно обновление',
-      body: `Началось скачивание версии ${info.version}. Приложение закроется и перезагрузится автоматически`,
-      icon: icon
-    }).show()
-  })
-
-  autoUpdater.on('update-downloaded', () => {
-    console.log('Обновление загружено')
-    // Перезапустить приложение для установки обновления
-    autoUpdater.quitAndInstall()
   })
 
   // Обработка вызова для открытия окна выбора папки

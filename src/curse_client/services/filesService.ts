@@ -26,3 +26,9 @@ export async function fetchFiles(ids: number[]): Promise<File[]> {
   const response = await post<CurseData<File[]>>('/v1/mods/files', fileIds)
   return response.data
 }
+
+export async function fetchDownloadUrl(modId: number, fileId: number): Promise<string> {
+  const response = await get<CurseData<string>>(`/v1/mods/${modId}/files/${fileId}/download-url`)
+  return response.data
+}
+

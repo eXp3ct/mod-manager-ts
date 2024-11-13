@@ -7,6 +7,8 @@ import fs from 'fs'
 import { autoUpdater } from 'electron-updater'
 import crypto from 'crypto'
 import AdmZip from 'adm-zip'
+import { Manifest } from '../types/minecraft'
+import { fetchDownloadUrl } from '../curse_client/services/filesService'
 
 autoUpdater.setFeedURL({
   provider: 'github',
@@ -108,10 +110,7 @@ app.whenReady().then(() => {
       if (fs.existsSync(filePath)) {
         // Читаем как бинарные данные
         const fileContent = fs.readFileSync(filePath)
-        const md5Hash = crypto
-          .createHash('md5')
-          .update(fileContent) // fileContent это Buffer из response
-          .digest('hex')
+        const md5Hash = crypto.createHash('md5').update(fileContent).digest('hex')
         const sha1Hash = crypto.createHash('sha1').update(fileContent).digest('hex')
 
         return {
@@ -145,6 +144,25 @@ app.whenReady().then(() => {
             }
 
             fs.rmdirSync(overridesPath)
+          }
+
+          // Считываем файл manifest.json
+          const manifestPath = path.join(folderPath, 'manifest.json')
+          const manifestContent = fs.readFileSync(manifestPath, 'utf8')
+          const manifest: Manifest = JSON.parse(manifestContent)
+
+          // Загружаем файлы по ссылкам из manifest.json
+          for (const file of manifest.files) {
+            let downloadUrl = ''
+            try {
+              downloadUrl = await fetchDownloadUrl(file.projectID, file.fileID)
+            } catch (error) {
+              console.log('Error fetching download url', error)
+              continue
+            }
+            const fileResponse = await axios.get(downloadUrl, { responseType: 'arraybuffer' })
+            const filePath = path.join(folderPath, path.basename(downloadUrl))
+            fs.writeFileSync(filePath, fileResponse.data)
           }
 
           console.log('Unpacking done')

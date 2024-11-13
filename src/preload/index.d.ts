@@ -12,5 +12,6 @@ declare global {
       downloadUrls: string,
       folderPath: string
     ) => Promise<{ success: boolean; error?: unknown; md5Hash: string; sha1Hash: string }>
+    extractZip: (filePath: string, folderPath: string) => Promise<void>
   }
 }

@@ -6,6 +6,7 @@ import axios from 'axios'
 import fs from 'fs'
 import { autoUpdater } from 'electron-updater'
 import crypto from 'crypto'
+import AdmZip from 'adm-zip'
 
 autoUpdater.setFeedURL({
   provider: 'github',
@@ -121,16 +122,43 @@ app.whenReady().then(() => {
       }
 
       const response = await axios.get(url, {
-        responseType: 'arraybuffer' // Важно! Меняем на arraybuffer
+        responseType: 'arraybuffer'
       })
 
-      // Записываем файл
       fs.writeFileSync(filePath, response.data)
-      const fileContent = fs.readFileSync(filePath)
-      const md5Hash = crypto
-        .createHash('md5')
-        .update(fileContent) // fileContent это Buffer из response
-        .digest('hex')
+      let fileContent: Buffer
+      if (filePath.endsWith('.zip')) {
+        try {
+          const zip = new AdmZip(filePath)
+          zip.extractAllTo(folderPath, true)
+
+          const overridesPath = path.join(folderPath, 'overrides')
+          if (fs.existsSync(overridesPath) && fs.lstatSync(overridesPath).isDirectory()) {
+            const files = fs.readdirSync(overridesPath)
+
+            const parentFolderPath = path.dirname(folderPath)
+
+            for (const file of files) {
+              const sourcePath = path.join(overridesPath, file)
+              const destPath = path.join(parentFolderPath, file)
+              fs.renameSync(sourcePath, destPath)
+            }
+
+            fs.rmdirSync(overridesPath)
+          }
+
+          console.log('Unpacking done')
+        } catch (error) {
+          console.error('Unpacking error:', error)
+        }
+      }
+      if (filePath.endsWith('.zip')) {
+        fileContent = fs.readFileSync(filePath)
+        fs.unlinkSync(filePath)
+      } else {
+        fileContent = fs.readFileSync(filePath)
+      }
+      const md5Hash = crypto.createHash('md5').update(fileContent).digest('hex')
       const sha1Hash = crypto.createHash('sha1').update(fileContent).digest('hex')
 
       return {
@@ -139,7 +167,7 @@ app.whenReady().then(() => {
         md5Hash: md5Hash
       }
     } catch (error) {
-      console.error('Ошибка при скачивании файла:', error)
+      console.error('Error installing mod:', error)
       return { success: false, error }
     }
   })

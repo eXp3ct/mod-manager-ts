@@ -13,7 +13,9 @@ if (process.contextIsolated) {
       ...electronAPI,
       selectFolder: async () => await ipcRenderer.invoke('select-folder'),
       downloadFiles: async (downloadUrls: string, folderPath: string) =>
-        await ipcRenderer.invoke('download-file', downloadUrls, folderPath)
+        await ipcRenderer.invoke('download-file', downloadUrls, folderPath),
+      extractZip: async (filePath: string, folderPath: string) =>
+        await ipcRenderer.invoke('extract-zip', filePath, folderPath)
     })
     contextBridge.exposeInMainWorld('api', api)
   } catch (error) {

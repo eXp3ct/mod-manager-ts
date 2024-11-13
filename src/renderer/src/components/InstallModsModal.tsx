@@ -122,6 +122,10 @@ const InstallModsModal: React.FC<InstallModsModalProps> = ({ onClose, searchPara
         setIsInstalling(false)
         setCanClose(true)
         setIsError(true)
+        new Notification('Ошибка установки', {
+          body: `Не удалось установить ${mod?.name}, попробуйте заново или установить вручную`,
+          icon: icon
+        })
         return
       }
 

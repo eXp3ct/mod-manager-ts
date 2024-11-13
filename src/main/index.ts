@@ -7,8 +7,24 @@ import fs from 'fs'
 import { autoUpdater } from 'electron-updater'
 import crypto from 'crypto'
 import AdmZip from 'adm-zip'
-import { Manifest } from '../types/minecraft'
-import { fetchDownloadUrl } from '../curse_client/services/filesService'
+
+export type Manifest = {
+  minecraft: {
+    version: string
+    modLoaders: { id: string; primary: boolean }[]
+  }
+  manifestType: string
+  manifestVersion: number
+  name: string
+  version: string
+  author: string
+  files: { projectID: number; fileID: number; required: boolean }[]
+  overrides: string
+}
+
+export type ApiData<T> = {
+  data: T
+}
 
 autoUpdater.setFeedURL({
   provider: 'github',
@@ -82,7 +98,6 @@ app.whenReady().then(() => {
   })
 
   createWindow()
-
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
@@ -155,7 +170,16 @@ app.whenReady().then(() => {
           for (const file of manifest.files) {
             let downloadUrl = ''
             try {
-              downloadUrl = await fetchDownloadUrl(file.projectID, file.fileID)
+              downloadUrl = (
+                await axios.get<ApiData<string>>(
+                  `https://api.curseforge.com/v1/mods/${file.projectID}/files/${file.fileID}/download-url`,
+                  {
+                    headers: {
+                      'x-api-key': import.meta.env.VITE_API_KEY
+                    }
+                  }
+                )
+              ).data.data
             } catch (error) {
               console.log('Error fetching download url', error)
               continue

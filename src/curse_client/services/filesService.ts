@@ -1,6 +1,5 @@
 import { get, post } from '../apiClient'
-import { CurseData, ModLoaderType } from './../../types/index'
-import { File } from 'src/types'
+import { CurseData, ModLoaderType, File } from './../../types/index'
 
 export async function fetchModFiles(
   modId: number,

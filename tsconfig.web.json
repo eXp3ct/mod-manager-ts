@@ -5,8 +5,8 @@
     "src/renderer/src/**/*",
     "src/renderer/src/**/*.tsx",
     "src/preload/*.d.ts",
-    "src/types/*",
-    "src/curse_client/**/*.ts"
+    "src/types/**/*",
+    "src/curse_client/**/*"
   ],
   "compilerOptions": {
     "composite": true,

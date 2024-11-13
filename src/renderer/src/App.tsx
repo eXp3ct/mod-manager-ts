@@ -90,7 +90,6 @@ function AppContent(): JSX.Element {
     setIsCategoriesLoading(true)
     Promise.all([fetchCategories(searchParams?.classId), fetchMinecraftVersions(true)])
       .then((value) => {
-        console.log(value[0])
         setCategories(value[0])
         setVersions(value[1])
         setIsCategoriesLoading(false)
@@ -103,7 +102,7 @@ function AppContent(): JSX.Element {
           details: { component: 'App', action: 'initial-load' }
         })
       })
-  }, [logError])
+  }, [showing])
 
   const handleVersionChange = (gameVersion: string): void => {
     setSearchParams((prev) => ({ ...prev, gameVersion, index: 0 }))

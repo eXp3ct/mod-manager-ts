@@ -5,27 +5,40 @@ interface SelectedModsContextProps {
   selectedMods: Mod[]
   toggleModSelection: (mod: Mod) => void
   clearSelectedMods: () => void
+  showing: 'mods' | 'modpacks'
+  setShowing: (showing: 'mods' | 'modpacks') => void
 }
 
 const SelectedModsContext = createContext<SelectedModsContextProps | undefined>(undefined)
 
 export const SelectedModsProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
   const [selectedMods, setSelectedMods] = useState<Mod[]>([])
+  const [showing, setShowing] = useState<'mods' | 'modpacks'>('mods')
 
   const toggleModSelection = (mod: Mod): void => {
     setSelectedMods((prevSelectedMods) => {
-      if (prevSelectedMods.some((selectedMod) => selectedMod.id === mod.id)) {
-        return prevSelectedMods.filter((selectedMod) => selectedMod.id !== mod.id)
-      } else {
-        return [...prevSelectedMods, { ...mod, selected: true }]
+      const isSelected = prevSelectedMods.some((selectedMod) => selectedMod.id === mod.id)
+
+      if (showing === 'mods') {
+        return isSelected
+          ? prevSelectedMods.filter((selectedMod) => selectedMod.id !== mod.id)
+          : [...prevSelectedMods, { ...mod, selected: true }]
       }
+
+      if (showing === 'modpacks') {
+        return isSelected ? [] : [{ ...mod, selected: true }]
+      }
+
+      return prevSelectedMods
     })
   }
   const clearSelectedMods = (): void => {
     setSelectedMods([])
   }
   return (
-    <SelectedModsContext.Provider value={{ selectedMods, toggleModSelection, clearSelectedMods }}>
+    <SelectedModsContext.Provider
+      value={{ selectedMods, toggleModSelection, clearSelectedMods, showing, setShowing }}
+    >
       {children}
     </SelectedModsContext.Provider>
   )

@@ -8,7 +8,7 @@ import { CategorySidebar } from './components/CategorySidebar'
 import { ModList } from './components/ModList'
 import { ArrowDownWideNarrow, ArrowUpWideNarrow } from 'lucide-react'
 import { fetchMods } from 'src/curse_client/services/cacheService'
-import { SelectedModsProvider } from './contexts/SelectedModsContext'
+import { SelectedModsProvider, useSelectedMods } from './contexts/SelectedModsContext'
 import InstallModsModal from './components/InstallModsModal'
 import CategoriesListSkeleton from './components/CategorySideBarSkeleton'
 import icon from '../../../resources/icon.png'
@@ -37,6 +37,7 @@ function AppContent(): JSX.Element {
   const [isCategoriesLoading, setIsCategoriesLoading] = useState<boolean>(true)
   const [updateProgress, setUpdateProgress] = useState<number>(0)
   const [isDownloadingUpdate, setIsDownloadingUpdate] = useState<boolean>(false)
+  const { showing, setShowing } = useSelectedMods()
 
   const loaders = Object.keys(ModLoaderType)
     .filter((key) => isNaN(Number(key)))
@@ -85,10 +86,11 @@ function AppContent(): JSX.Element {
       })
   }, [searchParams])
 
-  useEffect(() => {
+  useMemo(() => {
     setIsCategoriesLoading(true)
-    Promise.all([fetchCategories(), fetchMinecraftVersions(true)])
+    Promise.all([fetchCategories(searchParams?.classId), fetchMinecraftVersions(true)])
       .then((value) => {
+        console.log(value[0])
         setCategories(value[0])
         setVersions(value[1])
         setIsCategoriesLoading(false)
@@ -153,23 +155,44 @@ function AppContent(): JSX.Element {
     setSearchParams((prev) => ({ ...prev, sortOrder: order }))
   }
 
-  // Остальной код компонента остается тем же
+  const handleShowingChange = (): void => {
+    let classId = 6
+    if (showing === 'mods') {
+      setShowing('modpacks')
+      classId = 4471
+    } else if (showing === 'modpacks') {
+      setShowing('mods')
+      classId = 6
+    }
+
+    setSearchParams((prev) => ({ ...prev, classId: classId, index: 0 }))
+    setPageNumber(1)
+  }
+
   return (
     <div className="flex flex-col h-full bg-gray-900 text-white">
       {/* Навбар */}
       <nav className="flex items-center justify-between bg-gray-800 p-4 shadow-lg">
-        <div>
-          <h1 className="text-2xl font-bold">
-            Minecraft Mod Manager {import.meta.env.VITE_APP_VERSION}
-          </h1>
-          {isDownloadingUpdate && (
-            <div className="bg-gray-200 rounded-full h-4 mt-2 overflow-hidden">
-              <div
-                className="bg-blue-500 h-4 transition-all duration-300"
-                style={{ width: `${updateProgress}%` }}
-              />
-            </div>
-          )}
+        <div className="flex items-center gap-5">
+          <div>
+            <h1 className="text-2xl font-bold">
+              Minecraft Mod Manager v{import.meta.env.VITE_APP_VERSION}
+            </h1>
+            {isDownloadingUpdate && (
+              <div className="bg-gray-200 rounded-full h-4 mt-2 overflow-hidden">
+                <div
+                  className="bg-blue-500 h-4 transition-all duration-300"
+                  style={{ width: `${updateProgress}%` }}
+                />
+              </div>
+            )}
+          </div>
+          <div
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 hover:cursor-pointer"
+            onClick={() => handleShowingChange()}
+          >
+            {showing === 'mods' ? 'Сборки' : 'Моды'}
+          </div>
         </div>
         <input
           type="text"
@@ -191,6 +214,7 @@ function AppContent(): JSX.Element {
             categories={categories}
             onChange={handleCategoryChange}
             selectedCategoryId={searchParams.categoryId}
+            maxParentId={searchParams.classId}
           />
         )}
 

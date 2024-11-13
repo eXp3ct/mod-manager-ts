@@ -2,8 +2,6 @@ import React, { useState } from 'react'
 import { Category } from 'src/types'
 import { ChevronRight, ChevronDown } from 'lucide-react'
 
-const MAX_PARENT_CATEGORY_ID = 6
-
 type CategoryItemProps = {
   category: Category
   categories: Category[]
@@ -80,10 +78,9 @@ export const CategorySidebar: React.FC<{
   categories: Category[]
   onChange: (category: Category) => void
   selectedCategoryId: number | undefined
-}> = ({ categories, onChange, selectedCategoryId }) => {
-  const rootCategories = categories.filter(
-    (category) => category.parentCategoryId === MAX_PARENT_CATEGORY_ID || !category.parentCategoryId
-  )
+  maxParentId: number | undefined
+}> = ({ categories, onChange, selectedCategoryId, maxParentId }) => {
+  const rootCategories = categories.filter((category) => category.parentCategoryId === maxParentId)
 
   return (
     <aside className="w-1/6 bg-gray-800 p-4 sticky top-0 h-screen overflow-y-auto">

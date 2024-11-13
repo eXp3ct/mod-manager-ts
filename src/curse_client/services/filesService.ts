@@ -31,4 +31,3 @@ export async function fetchDownloadUrl(modId: number, fileId: number): Promise<s
   const response = await get<CurseData<string>>(`/v1/mods/${modId}/files/${fileId}/download-url`)
   return response.data
 }
-
